@@ -1,0 +1,190 @@
+extends Node3D
+
+@export var player_scene: PackedScene = preload("res://src/player/Player3D.tscn")
+@export var shop_scene: PackedScene = preload("res://src/world/Shop.tscn")
+@export var rain_scene: PackedScene = preload("res://src/fx/rain_particles.tscn")
+@export var obstacle_rock_scene: PackedScene = preload("res://src/world/obstacle_rock.tscn")
+@export var extraction_zone_script: Script = preload("res://src/world/extraction_zone.gd")
+
+@onready var sun_light = $DirectionalLight3D
+@onready var sun_visual = $SunVisual
+var world_env: WorldEnvironment
+var rain_instance: GPUParticles3D
+var player_instance: Node3D
+var extraction_zone_instance: Area3D
+
+func _ready():
+	_cleanup_legacy_world_chunks()
+	setup_environment()
+	spawn_player()
+	spawn_extraction_zone()
+	# spawn_shop() # Shop is now in Main3D.tscn
+	spawn_obstacles()
+
+	if TimeManager and not TimeManager.extraction_started.is_connected(_on_extraction_started):
+		TimeManager.extraction_started.connect(_on_extraction_started)
+	if TimeManager and not TimeManager.extraction_finished.is_connected(_on_extraction_finished):
+		TimeManager.extraction_finished.connect(_on_extraction_finished)
+	
+	# Connect Weather System
+	if rain_instance and world_env:
+		# Use Call Deferred to ensure nodes are ready
+		call_deferred("_setup_weather_manager")
+
+func _cleanup_legacy_world_chunks() -> void:
+	for node_name in ["Kamyczki", "Kamyk3"]:
+		var node := get_node_or_null(node_name)
+		if node:
+			node.queue_free()
+
+func _setup_weather_manager():
+	WeatherManager.set_environment_references(world_env, rain_instance)
+
+func setup_environment():
+	# Create WorldEnvironment dynamically if not present
+	world_env = WorldEnvironment.new()
+	var env = Environment.new()
+	env.background_mode = Environment.BG_SKY
+	var sky = Sky.new()
+	sky.sky_material = ProceduralSkyMaterial.new()
+	env.sky = sky
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	world_env.environment = env
+	add_child(world_env)
+	
+	# Create Rain Particles (attached to camera or player later)
+	rain_instance = rain_scene.instantiate()
+	add_child(rain_instance)
+	rain_instance.position = Vector3(0, 10, 0) # Start high
+	rain_instance.emitting = false
+
+func _process(delta):
+	# Update sun
+	if sun_light:
+		var time = TimeManager.current_time
+		# Rotate sun around X. 
+		# We need to map 0..24 to a full rotation.
+		# Noon (12) is -90.
+		# Sunrise (6) is 0 (or -180 depending on orientation). 
+		# Let's say Sunrise is at X=0 (Horizon), Noon is X=-90.
+		var rot_x = -(time - 6.0) * 15.0
+		sun_light.rotation_degrees.x = rot_x
+		
+		# Move visible sun sphere to match light direction.
+		if sun_visual:
+			var dir = -sun_light.global_transform.basis.z
+			var center = Vector3.ZERO
+			if player_instance:
+				center = player_instance.global_position
+			sun_visual.global_position = center + (dir * 200.0)
+		
+		# Optional: Adjust color/energy based on time?
+		# Currently simple rotation.
+		
+	# Update Rain Position
+	if rain_instance and player_instance:
+		var pos = player_instance.global_position
+		rain_instance.global_position = Vector3(pos.x, pos.y + 10.0, pos.z)
+
+
+func spawn_player():
+	player_instance = player_scene.instantiate()
+	var spawn = $PlayerSpawn
+	add_child(player_instance)
+	player_instance.global_transform.origin = spawn.global_transform.origin # Safe after add_child
+	# Ustaw kamerę gracza jako current
+	player_instance.get_node("CameraPivot/SpringArm3D/Camera3D").current = true
+
+func spawn_shop():
+	var shop = shop_scene.instantiate()
+	add_child(shop)
+	# Position near the dock, slightly off-center
+	# Dock was at (0, -0.75, 5). Let's put shop at (5, -0.5, 5)
+	shop.global_position = Vector3(5, -0.5, 5)
+	shop.rotation_degrees.y = -90
+
+func spawn_obstacles():
+	if not obstacle_rock_scene: return
+	
+	for i in range(15):
+		var rock = obstacle_rock_scene.instantiate()
+		add_child(rock)
+		
+		# Valid spawn area: -20 to 20, excluding dock area
+		var valid = false
+		var pos = Vector3.ZERO
+		
+		for attempt in range(10): # Try 10 times to find spot
+			pos = Vector3(
+				randf_range(-20.0, 20.0),
+				randf_range(-0.5, 0.5), # Slight vertical variation
+				randf_range(-20.0, 20.0)
+			)
+			
+			# Check distance to Dock (approx 0, 0, 5)
+			if pos.distance_to(Vector3(0, 0, 5)) > 8.0:
+				valid = true
+				break
+		
+		if valid:
+			rock.global_position = pos
+			rock.rotation.y = randf() * TAU
+			rock.scale = Vector3.ONE * randf_range(0.8, 2.0)
+		else:
+			rock.queue_free()
+
+func spawn_extraction_zone() -> void:
+	if extraction_zone_script == null:
+		return
+
+	extraction_zone_instance = Area3D.new()
+	extraction_zone_instance.name = "ExtractionZone"
+	extraction_zone_instance.set_script(extraction_zone_script)
+	add_child(extraction_zone_instance)
+
+	if extraction_zone_instance.has_method("initialize_visuals"):
+		extraction_zone_instance.initialize_visuals()
+
+	_randomize_extraction_zone_position()
+
+func _on_extraction_started(_total_seconds: int) -> void:
+	_randomize_extraction_zone_position()
+	if player_instance and player_instance.has_method("show_notification"):
+		player_instance.show_notification("Nowy punkt ekstrakcji zostal oznaczony", 2.2)
+
+func _on_extraction_finished(reason: String) -> void:
+	if reason != "zone_extract" and reason != "timeout":
+		return
+	if InventoryManager:
+		InventoryManager.save_game()
+	get_tree().call_deferred("change_scene_to_file", "res://src/ui/lobby_world.tscn")
+
+func _randomize_extraction_zone_position() -> void:
+	if extraction_zone_instance == null:
+		return
+
+	var min_coord := -20.0
+	var max_coord := 20.0
+	var dock_pos := Vector3(0.0, 0.0, 5.0)
+	var chosen := Vector3(12.0, -0.45, -12.0)
+	var found := false
+
+	for _attempt in range(40):
+		var candidate := Vector3(
+			randf_range(min_coord, max_coord),
+			-0.45,
+			randf_range(min_coord, max_coord)
+		)
+		if candidate.distance_to(dock_pos) < 10.0:
+			continue
+		if player_instance and candidate.distance_to(player_instance.global_position) < 8.0:
+			continue
+		chosen = candidate
+		found = true
+		break
+
+	if not found:
+		chosen = Vector3(14.0, -0.45, -14.0)
+
+	extraction_zone_instance.global_position = chosen

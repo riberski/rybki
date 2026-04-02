@@ -1,0 +1,511 @@
+[gd_scene load_steps=9 format=3 uid="uid://cpvu3ma48jwgx"]
+
+[ext_resource type="Script" uid="uid://l44roufgdmhj" path="res://src/ui/lobby_hub.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/challenge_ui.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://src/ui/progression_ui.tscn" id="4"]
+[ext_resource type="PackedScene" uid="uid://draftuiscene" path="res://src/ui/draft_ui.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://src/ui/contract_offer_ui.tscn" id="6"]
+
+[sub_resource type="StyleBoxFlat" id="1"]
+content_margin_left = 18.0
+content_margin_top = 16.0
+content_margin_right = 18.0
+content_margin_bottom = 16.0
+bg_color = Color(0.141176, 0.117647, 0.0901961, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.27451, 0.231373, 0.176471, 0.9)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="2"]
+content_margin_left = 14.0
+content_margin_top = 12.0
+content_margin_right = 14.0
+content_margin_bottom = 12.0
+bg_color = Color(0.176471, 0.145098, 0.109804, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.313726, 0.270588, 0.207843, 0.9)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="3"]
+content_margin_left = 16.0
+content_margin_top = 12.0
+content_margin_right = 16.0
+content_margin_bottom = 12.0
+bg_color = Color(0.109804, 0.0901961, 0.0705882, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.262745, 0.215686, 0.164706, 0.9)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[node name="LobbyHub" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0823529, 0.0705882, 0.054902, 1)
+
+[node name="ContractOfferUI" parent="." instance=ExtResource("6")]
+visible = false
+layout_mode = 1
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 28.0
+offset_right = -28.0
+offset_bottom = -124.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Root" type="HBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 26
+
+[node name="LeftPanel" type="PanelContainer" parent="Margin/Root"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("1")
+
+[node name="Stats" type="VBoxContainer" parent="Margin/Root/LeftPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Margin/Root/LeftPanel/Stats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Extraction Lobby"
+
+[node name="Subtitle" type="Label" parent="Margin/Root/LeftPanel/Stats"]
+layout_mode = 2
+text = "Przygotuj lodz i wyrusz na kolejny run."
+autowrap_mode = 2
+
+[node name="MoneyRow" type="HBoxContainer" parent="Margin/Root/LeftPanel/Stats"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="MoneyLabel" type="Label" parent="Margin/Root/LeftPanel/Stats/MoneyRow"]
+layout_mode = 2
+text = "Gotowka:"
+
+[node name="MoneyValue" type="Label" parent="Margin/Root/LeftPanel/Stats/MoneyRow"]
+layout_mode = 2
+text = "0"
+
+[node name="BreadRow" type="HBoxContainer" parent="Margin/Root/LeftPanel/Stats"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BreadLabel" type="Label" parent="Margin/Root/LeftPanel/Stats/BreadRow"]
+layout_mode = 2
+text = "Chleb (proby):"
+
+[node name="BreadValue" type="Label" parent="Margin/Root/LeftPanel/Stats/BreadRow"]
+layout_mode = 2
+text = "0"
+
+[node name="HullRow" type="HBoxContainer" parent="Margin/Root/LeftPanel/Stats"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HullLabel" type="Label" parent="Margin/Root/LeftPanel/Stats/HullRow"]
+layout_mode = 2
+text = "Kadlub:"
+
+[node name="HullValue" type="Label" parent="Margin/Root/LeftPanel/Stats/HullRow"]
+layout_mode = 2
+text = "100 / 100"
+
+[node name="FishRow" type="HBoxContainer" parent="Margin/Root/LeftPanel/Stats"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="FishLabel" type="Label" parent="Margin/Root/LeftPanel/Stats/FishRow"]
+layout_mode = 2
+text = "Ryby w ladowni:"
+
+[node name="FishValue" type="Label" parent="Margin/Root/LeftPanel/Stats/FishRow"]
+layout_mode = 2
+text = "0"
+
+[node name="Spacer" type="Control" parent="Margin/Root/LeftPanel/Stats"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+
+[node name="Hint" type="Label" parent="Margin/Root/LeftPanel/Stats"]
+layout_mode = 2
+text = "Cel: wyplyn, low i bezpiecznie wracaj."
+autowrap_mode = 2
+
+[node name="ProgressionUI" parent="Margin/Root/LeftPanel/Stats" instance=ExtResource("4")]
+layout_mode = 2
+
+[node name="MetaWidgets" type="VBoxContainer" parent="Margin/Root/LeftPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="BoatLoadout" type="PanelContainer" parent="Margin/Root/LeftPanel/MetaWidgets"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("2")
+
+[node name="BoatLoadoutBox" type="VBoxContainer" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BoatLoadoutTitle" type="Label" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox"]
+layout_mode = 2
+text = "Loadout lodzi"
+
+[node name="RelicsTitle" type="Label" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox"]
+layout_mode = 2
+text = "Reliki (4)"
+
+[node name="RelicSlots" type="VBoxContainer" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="RelicSlot1" type="OptionButton" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/RelicSlots"]
+layout_mode = 2
+
+[node name="RelicSlot2" type="OptionButton" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/RelicSlots"]
+layout_mode = 2
+
+[node name="RelicSlot3" type="OptionButton" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/RelicSlots"]
+layout_mode = 2
+
+[node name="RelicSlot4" type="OptionButton" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/RelicSlots"]
+layout_mode = 2
+
+[node name="UpgradesTitle" type="Label" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox"]
+layout_mode = 2
+text = "Ulepszenia (4)"
+
+[node name="UpgradeSlots" type="VBoxContainer" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="UpgradeSlot1" type="HBoxContainer" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="UpgradeStat1" type="OptionButton" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot1"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="UpgradeLevel1" type="Label" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot1"]
+layout_mode = 2
+text = "Lv 0"
+
+[node name="UpgradeButton1" type="Button" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot1"]
+layout_mode = 2
+text = "+"
+
+[node name="UpgradeSlot2" type="HBoxContainer" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="UpgradeStat2" type="OptionButton" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot2"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="UpgradeLevel2" type="Label" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot2"]
+layout_mode = 2
+text = "Lv 0"
+
+[node name="UpgradeButton2" type="Button" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot2"]
+layout_mode = 2
+text = "+"
+
+[node name="UpgradeSlot3" type="HBoxContainer" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="UpgradeStat3" type="OptionButton" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot3"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="UpgradeLevel3" type="Label" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot3"]
+layout_mode = 2
+text = "Lv 0"
+
+[node name="UpgradeButton3" type="Button" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot3"]
+layout_mode = 2
+text = "+"
+
+[node name="UpgradeSlot4" type="HBoxContainer" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="UpgradeStat4" type="OptionButton" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot4"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="UpgradeLevel4" type="Label" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot4"]
+layout_mode = 2
+text = "Lv 0"
+
+[node name="UpgradeButton4" type="Button" parent="Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot4"]
+layout_mode = 2
+text = "+"
+
+[node name="RightPanel" type="PanelContainer" parent="Margin/Root"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("1")
+
+[node name="Actions" type="VBoxContainer" parent="Margin/Root/RightPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 12
+
+[node name="ActionsTitle" type="Label" parent="Margin/Root/RightPanel/Actions"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Akcje"
+
+[node name="ExtractionTimeLabel" type="Label" parent="Margin/Root/RightPanel/Actions"]
+layout_mode = 2
+text = "Czas ekstrakcji: 20 min (wczesny powrot od 2:00)"
+autowrap_mode = 2
+
+[node name="BoatBox" type="VBoxContainer" parent="Margin/Root/RightPanel/Actions"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BoatTitle" type="Label" parent="Margin/Root/RightPanel/Actions/BoatBox"]
+layout_mode = 2
+text = "Lodz"
+
+[node name="BoatName" type="Label" parent="Margin/Root/RightPanel/Actions/BoatBox"]
+layout_mode = 2
+text = "Aktualna: --"
+
+[node name="BoatSelect" type="OptionButton" parent="Margin/Root/RightPanel/Actions/BoatBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BoatPreview" type="Label" parent="Margin/Root/RightPanel/Actions/BoatBox"]
+layout_mode = 2
+text = "Podglad: --"
+
+[node name="BoatCredit" type="Label" parent="Margin/Root/RightPanel/Actions/BoatBox"]
+layout_mode = 2
+text = "Kredyt: $0"
+
+[node name="BoatEarnings" type="Label" parent="Margin/Root/RightPanel/Actions/BoatBox"]
+layout_mode = 2
+text = "Zarobek: $0"
+
+[node name="BoatNext" type="Label" parent="Margin/Root/RightPanel/Actions/BoatBox"]
+layout_mode = 2
+text = "Nastepna: --"
+
+[node name="BoatBuyButton" type="Button" parent="Margin/Root/RightPanel/Actions/BoatBox"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Kup lodz"
+
+[node name="ContractBox" type="VBoxContainer" parent="Margin/Root/RightPanel/Actions"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ContractTitle" type="Label" parent="Margin/Root/RightPanel/Actions/ContractBox"]
+layout_mode = 2
+text = "Kontrakt"
+
+[node name="ContractDescription" type="Label" parent="Margin/Root/RightPanel/Actions/ContractBox"]
+layout_mode = 2
+text = "Brak oferty."
+autowrap_mode = 2
+
+[node name="ContractRisk" type="Label" parent="Margin/Root/RightPanel/Actions/ContractBox"]
+layout_mode = 2
+
+[node name="ContractReward" type="Label" parent="Margin/Root/RightPanel/Actions/ContractBox"]
+layout_mode = 2
+
+[node name="ContractAcceptButton" type="Button" parent="Margin/Root/RightPanel/Actions/ContractBox"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Przyjmij kontrakt"
+
+[node name="ExpeditionModifiers" type="VBoxContainer" parent="Margin/Root/RightPanel/Actions"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ExpeditionTitle" type="Label" parent="Margin/Root/RightPanel/Actions/ExpeditionModifiers"]
+layout_mode = 2
+text = "Modyfikatory wyprawy"
+
+[node name="ExpeditionPositive" type="Label" parent="Margin/Root/RightPanel/Actions/ExpeditionModifiers"]
+layout_mode = 2
+text = "+ --"
+
+[node name="ExpeditionNegative" type="Label" parent="Margin/Root/RightPanel/Actions/ExpeditionModifiers"]
+layout_mode = 2
+text = "- --"
+
+[node name="StartRunButton" type="Button" parent="Margin/Root/RightPanel/Actions"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "Wyplyn (Start Run)"
+
+[node name="SellAllButton" type="Button" parent="Margin/Root/RightPanel/Actions"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "Sprzedaj wszystkie ryby"
+
+[node name="PendingFishLabel" type="Label" parent="Margin/Root/RightPanel/Actions"]
+layout_mode = 2
+text = "Ryby do odebrania: 0"
+
+[node name="ClaimFishButton" type="Button" parent="Margin/Root/RightPanel/Actions"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "Odbierz ryby"
+
+[node name="BuyCrateButton" type="Button" parent="Margin/Root/RightPanel/Actions"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "Kup skrzynke perkow ($200)"
+
+[node name="ReturnMenuButton" type="Button" parent="Margin/Root/RightPanel/Actions"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "Powrot do menu"
+
+[node name="ActionsNote" type="Label" parent="Margin/Root/RightPanel/Actions"]
+layout_mode = 2
+text = "To jest poczatkowy hub pod extraction."
+autowrap_mode = 2
+
+[node name="BottomBar" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -86.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("3")
+
+[node name="BottomBarButtons" type="HBoxContainer" parent="BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="NavStartRun" type="Button" parent="BottomBar/BottomBarButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Wyplyn"
+
+[node name="NavContract" type="Button" parent="BottomBar/BottomBarButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Kontrakt"
+
+[node name="NavBuyCrate" type="Button" parent="BottomBar/BottomBarButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Skrzynka"
+
+[node name="NavSellAll" type="Button" parent="BottomBar/BottomBarButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Sprzedaj"
+
+[node name="NavClaimFish" type="Button" parent="BottomBar/BottomBarButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Odbierz"
+
+[node name="NavLoadout" type="Button" parent="BottomBar/BottomBarButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Loadout"
+
+[node name="NavManageBoats" type="Button" parent="BottomBar/BottomBarButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Lodzie"
+
+[node name="NavPlanExpedition" type="Button" parent="BottomBar/BottomBarButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Modyfikatory"
+
+[node name="NavReturnMenu" type="Button" parent="BottomBar/BottomBarButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Menu"
+
+[node name="DraftUI" parent="." instance=ExtResource("5")]
+visible = false
+layout_mode = 1
+
+[node name="ChallengeUI" parent="." instance=ExtResource("3")]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = -152.0
+offset_right = 332.0
+offset_bottom = -32.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[connection signal="pressed" from="Margin/Root/RightPanel/Actions/ContractBox/ContractAcceptButton" to="." method="_on_contract_accept_button_pressed"]
+[connection signal="pressed" from="Margin/Root/RightPanel/Actions/StartRunButton" to="." method="_on_start_run_button_pressed"]
+[connection signal="pressed" from="Margin/Root/RightPanel/Actions/SellAllButton" to="." method="_on_sell_all_button_pressed"]
+[connection signal="pressed" from="Margin/Root/RightPanel/Actions/ClaimFishButton" to="." method="_on_claim_fish_button_pressed"]
+[connection signal="pressed" from="Margin/Root/RightPanel/Actions/ReturnMenuButton" to="." method="_on_return_menu_button_pressed"]

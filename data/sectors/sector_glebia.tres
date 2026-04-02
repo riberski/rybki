@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SectorResource" load_steps=2 format=3 uid="uid://glebia_005"]
+
+[ext_resource type="Script" path="res://src/resources/sector_resource.gd" id="1_sector"]
+
+[resource]
+script = ExtResource("1_sector")
+id = "sector_glebia"
+display_name = "Wielka Głębia"
+description = "Głębokie, ciemne wody."
+difficulty_tier = 3
+hazard_type = "NONE"
+hazard_intensity = 0.6
+available_fish = []
+fish_rarity_multiplier = 1.3
+fog_density = 0.03
+water_color = Color(0.05, 0.05, 0.2, 1)

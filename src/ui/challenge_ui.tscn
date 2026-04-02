@@ -1,0 +1,57 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource path="res://src/ui/challenge_ui.gd" type="Script" id=1]
+
+[node name="ChallengeUI" type="Control"]
+custom_minimum_size = Vector2(300, 120)
+script = ExtResource( 1 )
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="DailyRow" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DailyLabel" type="Label" parent="Panel/Margin/VBox/DailyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Codzienne:"
+
+[node name="DailyStatus" type="Label" parent="Panel/Margin/VBox/DailyRow"]
+layout_mode = 2
+text = "-"
+
+[node name="WeeklyRow" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WeeklyLabel" type="Label" parent="Panel/Margin/VBox/WeeklyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Tygodniowe:"
+
+[node name="WeeklyStatus" type="Label" parent="Panel/Margin/VBox/WeeklyRow"]
+layout_mode = 2
+text = "-"

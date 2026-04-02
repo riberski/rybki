@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#2d3a48"/>
+  <circle cx="128" cy="128" r="90" fill="#4fc3f7"/>
+  <path d="M128 60 Q148 100 128 196 Q108 100 128 60 Z" fill="#1976d2"/>
+  <ellipse cx="128" cy="128" rx="40" ry="18" fill="#fff" opacity="0.5"/>
+  <text x="128" y="140" font-size="40" text-anchor="middle" fill="#fff" font-family="Arial" font-weight="bold">F</text>
+</svg>

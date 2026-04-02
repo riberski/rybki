@@ -1,0 +1,143 @@
+[gd_scene load_steps=2 format=3 uid="uid://shopui_scene_uid"]
+
+[ext_resource type="Script" path="res://src/ui/shop_ui.gd" id="1_script"]
+
+[node name="ShopUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -150.0
+offset_right = 200.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Panel"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 40.0
+grow_horizontal = 2
+text = "Fishing Shop"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MoneyLabel" type="Label" parent="Panel"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -100.0
+offset_bottom = 40.0
+grow_horizontal = 0
+text = "Money: $0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 60.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RodUpgrade" type="HBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/VBoxContainer/RodUpgrade"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Better Rod (Lvl 1)"
+
+[node name="CostLabel" type="Label" parent="Panel/VBoxContainer/RodUpgrade"]
+layout_mode = 2
+text = "$100"
+
+[node name="BuyButton" type="Button" parent="Panel/VBoxContainer/RodUpgrade"]
+layout_mode = 2
+text = "Upgrade"
+
+[node name="BoatUpgrade" type="HBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/VBoxContainer/BoatUpgrade"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Faster Boat (Lvl 1)"
+
+[node name="CostLabel" type="Label" parent="Panel/VBoxContainer/BoatUpgrade"]
+layout_mode = 2
+text = "$150"
+
+[node name="BuyButton" type="Button" parent="Panel/VBoxContainer/BoatUpgrade"]
+layout_mode = 2
+text = "Upgrade"
+
+[node name="HSeparator" type="HSeparator" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="BaitLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Baits"
+horizontal_alignment = 1
+
+[node name="BaitsContainer" type="VBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EarlyReturnSeparator" type="HSeparator" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="EarlyReturnContainer" type="HBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="EarlyReturnLabel" type="Label" parent="Panel/VBoxContainer/EarlyReturnContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Wczesny powrot"
+
+[node name="EarlyReturnCostLabel" type="Label" parent="Panel/VBoxContainer/EarlyReturnContainer"]
+layout_mode = 2
+text = "Free"
+
+[node name="EarlyReturnWaitLabel" type="Label" parent="Panel/VBoxContainer/EarlyReturnContainer"]
+layout_mode = 2
+text = "Powrot za 2:00"
+horizontal_alignment = 1
+
+[node name="EarlyReturnButton" type="Button" parent="Panel/VBoxContainer/EarlyReturnContainer"]
+layout_mode = 2
+text = "Wroc"
+
+[node name="CloseButton" type="Button" parent="Panel"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -50.0
+offset_top = -40.0
+offset_right = 50.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Powrot"

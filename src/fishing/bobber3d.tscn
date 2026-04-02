@@ -1,0 +1,23 @@
+[gd_scene load_steps=5 format=3 uid="uid://bobber3uid"]
+
+[ext_resource type="Script" path="res://src/fishing/bobber3d.gd" id="1_script"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_bobber"]
+radius = 0.15
+height = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bobber"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_bobber"]
+radius = 0.15
+
+[node name="Bobber3D" type="RigidBody3D"]
+script = ExtResource("1_script")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_bobber")
+surface_material_override/0 = SubResource("StandardMaterial3D_bobber")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_bobber")

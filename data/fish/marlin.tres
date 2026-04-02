@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="FishResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/resources/fish_resource.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "marlin"
+name = "Blue Marlin"
+description = "An incredibly fast fish that darts around unpredictably."
+base_weight = 120.0
+difficulty = 4.5
+value = 250
+rarity = 0.9
+is_nocturnal = false
+behavior_type = "Dart"

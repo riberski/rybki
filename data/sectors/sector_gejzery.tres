@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SectorResource" load_steps=2 format=3 uid="uid://gejzery_007"]
+
+[ext_resource type="Script" path="res://src/resources/sector_resource.gd" id="1_sector"]
+
+[resource]
+script = ExtResource("1_sector")
+id = "sector_gejzery"
+display_name = "Kwaśne Gejzery"
+description = "Toksyczna woda. Ogień i dym."
+difficulty_tier = 3
+hazard_type = "ACID"
+hazard_intensity = 0.8
+available_fish = []
+fish_rarity_multiplier = 1.5
+fog_density = 0.05
+water_color = Color(0.2, 0.4, 0.1, 1)

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SectorResource" load_steps=2 format=3 uid="uid://mielizny_001"]
+
+[ext_resource type="Script" path="res://src/resources/sector_resource.gd" id="1_sector"]
+
+[resource]
+script = ExtResource("1_sector")
+id = "sector_mielizny"
+display_name = "Złote Mielizny"
+description = "Spokojne, płytkie wody. Idealne na start."
+difficulty_tier = 1
+hazard_type = "NONE"
+hazard_intensity = 0.0
+available_fish = []
+fish_rarity_multiplier = 1.0
+fog_density = 0.005
+water_color = Color(0, 0.658824, 0.819608, 1)

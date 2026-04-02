@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SectorResource" load_steps=2 format=3 uid="uid://ruiny_003"]
+
+[ext_resource type="Script" path="res://src/resources/sector_resource.gd" id="1_sector"]
+
+[resource]
+script = ExtResource("1_sector")
+id = "sector_ruiny"
+display_name = "Zatopione Ruiny"
+description = "Pozostałości dawnej cywilizacji. Uwaga na prąd."
+difficulty_tier = 2
+hazard_type = "ELECTRIC"
+hazard_intensity = 0.4
+available_fish = []
+fish_rarity_multiplier = 1.2
+fog_density = 0.02
+water_color = Color(0.2, 0.3, 0.35, 1)

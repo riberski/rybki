@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="FishResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/resources/fish_resource.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "neon_tetra"
+name = "Neon Tetra"
+description = "A small, brightly colored fish that swims in predictable circles."
+base_weight = 0.2
+difficulty = 2.5
+value = 25
+rarity = 0.4
+is_nocturnal = false
+behavior_type = "Smooth"

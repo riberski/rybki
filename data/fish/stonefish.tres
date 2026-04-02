@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="FishResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/resources/fish_resource.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "stonefish"
+name = "Stonefish"
+description = "A heavy, lazy fish that barely moves from the bottom."
+base_weight = 5.0
+difficulty = 1.5
+value = 40
+rarity = 0.6
+is_nocturnal = true
+behavior_type = "Sinker"

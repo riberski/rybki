@@ -1,0 +1,14 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/resources/fish_resource.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "giant_catfish"
+name = "Giant Catfish"
+description = "A legendary monster of the deep."
+base_weight = 15.0
+difficulty = 5.0
+value = 500
+rarity = 1.0
+is_nocturnal = true

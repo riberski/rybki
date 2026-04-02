@@ -1,0 +1,14 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/resources/fish_resource.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "electric_eel"
+name = "Electric Eel"
+description = "A dangerous fish capable of generating electric shocks."
+base_weight = 7.5
+difficulty = 4.5
+value = 150
+rarity = 0.9
+is_nocturnal = true

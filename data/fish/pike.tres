@@ -1,0 +1,14 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/resources/fish_resource.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "pike"
+name = "Northern Pike"
+description = "A long, aggressive freshwater predator."
+base_weight = 5.0
+difficulty = 3.0
+value = 45
+rarity = 0.4
+is_nocturnal = false

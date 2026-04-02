@@ -1,0 +1,12 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/resources/fish_resource.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "golden_trout"
+name = "Golden Trout"
+description = "Rare and shiny!"
+base_weight = 1.2
+difficulty = 4.0
+value = 150

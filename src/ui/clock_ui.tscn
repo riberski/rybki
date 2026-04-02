@@ -1,0 +1,48 @@
+[gd_scene load_steps=2 format=3 uid="uid://b8dj5h753ryxt"]
+
+[ext_resource type="Script" uid="uid://rg3bwkwh1n5n" path="res://src/ui/clock_ui.gd" id="1_script"]
+
+[node name="ClockUI" type="Control"]
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -240.0
+offset_top = 95.0
+offset_right = -20.0
+offset_bottom = 135.0
+grow_horizontal = 0
+script = ExtResource("1_script")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TimeLabel" type="Label" parent="Panel"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "08:00"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ExtractionLabel" type="Label" parent="Panel"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = -6.0
+offset_top = -4.0
+offset_right = -6.0
+offset_bottom = 28.0
+grow_horizontal = 2
+text = "Ucieczka: --:--"
+horizontal_alignment = 1
+vertical_alignment = 1

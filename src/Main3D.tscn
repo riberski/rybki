@@ -1,0 +1,159 @@
+[gd_scene load_steps=28 format=3 uid="uid://c3k1k2k2j4k5"]
+
+[ext_resource type="Script" uid="uid://4bir2dkvbvk7" path="res://src/main3d.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://shopobjects" path="res://src/world/Shop.tscn" id="2_shop"]
+[ext_resource type="PackedScene" uid="uid://minigameui" path="res://src/ui/fishing_minigame_ui.tscn" id="3_minigame"]
+[ext_resource type="PackedScene" uid="uid://inventoryui" path="res://src/ui/inventory_ui.tscn" id="4_inventory"]
+[ext_resource type="PackedScene" uid="uid://d1xiobd701efn" path="res://src/ui/quest_ui.tscn" id="5_quest"]
+[ext_resource type="PackedScene" uid="uid://draftuiscene" path="res://src/ui/draft_ui.tscn" id="6_draft"]
+[ext_resource type="PackedScene" uid="uid://b8dj5h753ryxt" path="res://src/ui/clock_ui.tscn" id="7_clock"]
+[ext_resource type="PackedScene" path="res://src/ui/quota_ui.tscn" id="8_quota"]
+[ext_resource type="PackedScene" uid="uid://catchpopup" path="res://src/ui/catch_popup.tscn" id="9_catch"]
+[ext_resource type="PackedScene" uid="uid://dtfiyrl488qqg" path="res://src/ui/achievement_popup.tscn" id="10_achievement"]
+[ext_resource type="PackedScene" path="res://src/ui/shop_ui.tscn" id="11_shop_ui"]
+[ext_resource type="PackedScene" path="res://src/ui/journal_ui.tscn" id="12_journal"]
+[ext_resource type="PackedScene" uid="uid://skilluiuid" path="res://src/ui/skill_ui.tscn" id="13_skill"]
+[ext_resource type="PackedScene" uid="uid://oxiqxclxofw0" path="res://src/ui/pause_menu.tscn" id="14_pause"]
+[ext_resource type="PackedScene" uid="uid://cvj5atquvg7v2" path="res://src/assets/mapa1.glb" id="15_mapa1"]
+[ext_resource type="Script" uid="uid://b0nph6gc4fx2" path="res://src/world/water.gd" id="16_water_script"]
+[ext_resource type="Shader" uid="uid://dil2smi4awj3m" path="res://src/assets/water.gdshader" id="16_water_shader"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_top_color = Color(0.17, 0.38, 0.6, 1)
+sky_horizon_color = Color(0.6, 0.75, 0.9, 1)
+ground_bottom_color = Color(0.02, 0.04, 0.06, 1)
+sun_angle_max = 90.0
+sun_curve = 0.25
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky_main")
+ambient_light_source = 2
+ambient_light_energy = 0.6
+
+[sub_resource type="SphereMesh" id="SphereMesh_sun"]
+radius = 3.0
+height = 6.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sun"]
+shading_mode = 0
+albedo_color = Color(1, 0.95, 0.8, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_k1k2k"]
+size = Vector2(500, 500)
+subdivide_width = 96
+subdivide_depth = 96
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_water"]
+render_priority = 0
+shader = ExtResource("16_water_shader")
+shader_parameter/color = Color(0.6584971, 0.80355096, 1, 0.8)
+shader_parameter/roughness = 0.1
+shader_parameter/gloss_roughness = 0.03
+shader_parameter/reflect_strength = 0.9
+shader_parameter/fresnel_power = 5.0
+shader_parameter/wave_speed = 1.0
+shader_parameter/wave_height = 0.2
+shader_parameter/wave_frequency = 0.2
+shader_parameter/wave_time = 0.0
+shader_parameter/boat_position = Vector3(10, 3.2, 0)
+shader_parameter/boat_radius = 1.1
+shader_parameter/mask_offset = Vector2(0, -1)
+shader_parameter/mask_size = Vector2(0.8, 2.7)
+shader_parameter/boat_rotation_y = 0.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_k5k6k"]
+size = Vector3(10, 0.5, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_k7k8k"]
+albedo_color = Color(0.5, 0.3, 0.1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dock"]
+size = Vector3(10, 0.5, 2)
+
+[node name="Main3D" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8660253, 0.4330129, -0.2500001, 0, 0.49999994, 0.86602545, 0.50000024, -0.74999994, 0.43301257, 0, 40.962143, 0)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="ReflectionProbe" type="ReflectionProbe" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 20)
+intensity = 1.1
+size = Vector3(200, 60, 200)
+
+[node name="SunVisual" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 43.310425, 0)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_sun")
+surface_material_override/0 = SubResource("StandardMaterial3D_sun")
+
+[node name="PlayerSpawn" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 5)
+
+[node name="Water" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0045547485, -1.7981749, 11.353895)
+mesh = SubResource("PlaneMesh_k1k2k")
+surface_material_override/0 = SubResource("ShaderMaterial_water")
+script = ExtResource("16_water_script")
+
+[node name="Dock" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.75, 5)
+mesh = SubResource("BoxMesh_k5k6k")
+surface_material_override/0 = SubResource("StandardMaterial3D_k7k8k")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Dock"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Dock/StaticBody3D"]
+shape = SubResource("BoxShape3D_dock")
+
+[node name="MainMap" parent="." instance=ExtResource("15_mapa1")]
+transform = Transform3D(-1.7484556e-06, 0, 40, 0, 40, 0, -40, 0, -1.7484556e-06, -17.796322, -3.0397034, 21.916584)
+
+[node name="Shop" parent="." instance=ExtResource("2_shop")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 8)
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="FishingMinigameUI" parent="UI" instance=ExtResource("3_minigame")]
+visible = false
+
+[node name="InventoryUI" parent="UI" instance=ExtResource("4_inventory")]
+visible = false
+
+[node name="QuestUI" parent="UI" instance=ExtResource("5_quest")]
+
+[node name="DraftUI" parent="UI" instance=ExtResource("6_draft")]
+visible = false
+
+[node name="ClockUI" parent="UI" instance=ExtResource("7_clock")]
+
+[node name="QuotaUI" parent="UI" instance=ExtResource("8_quota")]
+
+[node name="CatchPopup" parent="UI" instance=ExtResource("9_catch")]
+visible = false
+
+[node name="AchievementPopup" parent="UI" instance=ExtResource("10_achievement")]
+visible = false
+
+[node name="ShopUI" parent="UI" instance=ExtResource("11_shop_ui")]
+visible = false
+
+[node name="JournalUI" parent="UI" instance=ExtResource("12_journal")]
+visible = false
+
+[node name="SkillUI" parent="UI" instance=ExtResource("13_skill")]
+visible = false
+
+[node name="PauseMenu" parent="UI" instance=ExtResource("14_pause")]
+visible = false
+
+[node name="Node" type="Node" parent="."]
+
+[node name="Node3D" type="Node3D" parent="."]

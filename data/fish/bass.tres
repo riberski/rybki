@@ -1,0 +1,12 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/resources/fish_resource.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "bass"
+name = "Largemouth Bass"
+description = "Aggressive freshwater fish."
+base_weight = 3.5
+difficulty = 2.5
+value = 35

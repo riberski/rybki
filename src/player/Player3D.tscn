@@ -1,0 +1,97 @@
+[gd_scene load_steps=17 format=3 uid="uid://d2k1k2k2j4k5"]
+
+[ext_resource type="Script" uid="uid://dfnvu7vrhnh33" path="res://src/player/player3d.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://inventoryui" path="res://src/ui/inventory_ui.tscn" id="2_ui"]
+[ext_resource type="PackedScene" path="res://src/ui/bait_ui.tscn" id="4_bait"]
+[ext_resource type="PackedScene" uid="uid://b8dj5h753ryxt" path="res://src/ui/clock_ui.tscn" id="5_clock"]
+[ext_resource type="PackedScene" uid="uid://d1xiobd701efn" path="res://src/ui/quest_ui.tscn" id="6_quest"]
+[ext_resource type="PackedScene" uid="uid://dtfiyrl488qqg" path="res://src/ui/achievement_popup.tscn" id="7_achieve"]
+[ext_resource type="PackedScene" path="res://src/ui/journal_ui.tscn" id="8_journal"]
+[ext_resource type="PackedScene" path="res://src/ui/quota_ui.tscn" id="9_quota"]
+[ext_resource type="ArrayMesh" uid="uid://dawbwv1gf1r5w" path="res://src/assets/lodeczka1.obj" id="10_boat"]
+[ext_resource type="Material" uid="uid://boatmatstd" path="res://src/assets/boat_material.tres" id="11_boatmat"]
+[ext_resource type="ArrayMesh" uid="uid://cu5njatqpp3c" path="res://src/assets/łódeczka ekstra pełna.obj" id="12_boat_full"]
+[ext_resource type="Material" path="res://src/assets/depth_mask_material.tres" id="13_depth_mask"]
+[ext_resource type="ArrayMesh" uid="uid://cvd4s0xtpdy4s" path="res://src/assets/tost.obj" id="14_tost"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
+height = 1.5
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_rod"]
+top_radius = 0.02
+bottom_radius = 0.05
+height = 3.0
+radial_segments = 8
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_boat"]
+albedo_color = Color(0.4, 0.2, 0.1, 1)
+
+[node name="Player3D" type="CharacterBody3D"]
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("CapsuleShape3D_player")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.079329096, 0, 0.99684846, 0, 1, 0, -0.99684846, 0, 0.079329096, 0, 0.42185688, 0)
+mesh = ExtResource("14_tost")
+
+[node name="BoatMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.5, 0, -4.371139e-08, 0, 0.5, 0, 4.371139e-08, 0, -0.5, 0, 0.3, 0)
+mesh = ExtResource("10_boat")
+surface_material_override/0 = ExtResource("11_boatmat")
+
+[node name="CameraPivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot"]
+spring_length = 4.0
+margin = 0.1
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D"]
+
+[node name="RodPivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.866025, -0.5, 0, 0.5, 0.866025, 1.0087967, 1.5392947, 0.3878837)
+
+[node name="RodMesh" type="MeshInstance3D" parent="RodPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.051011324, 0.99869853, 0, -0.99869853, 0.051011324, 0.1406166, -0.0062811375, -1.7432559)
+mesh = SubResource("CylinderMesh_rod")
+surface_material_override/0 = SubResource("StandardMaterial3D_boat")
+
+[node name="RodTip" type="Marker3D" parent="RodPivot/RodMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="QuotaUI" parent="CanvasLayer" instance=ExtResource("9_quota")]
+
+[node name="ClockUI" parent="CanvasLayer" instance=ExtResource("5_clock")]
+
+[node name="BaitUI" parent="CanvasLayer" instance=ExtResource("4_bait")]
+
+[node name="InventoryUI" parent="CanvasLayer" instance=ExtResource("2_ui")]
+visible = false
+
+[node name="QuestUI" parent="CanvasLayer" instance=ExtResource("6_quest")]
+
+[node name="JournalUI" parent="CanvasLayer" instance=ExtResource("8_journal")]
+visible = false
+
+[node name="AchievementPopup" parent="CanvasLayer" instance=ExtResource("7_achieve")]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.0
+offset_left = -20.0
+offset_top = 20.0
+offset_right = 20.0
+offset_bottom = 60.0
+grow_vertical = 1
+
+[node name="BoatDepthMask" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.5, 0, -4.371139e-08, 0, 0.5, 0, 4.371139e-08, 0, -0.5, 0, 0.3, 0)
+material_override = ExtResource("13_depth_mask")
+cast_shadow = 0
+mesh = ExtResource("12_boat_full")

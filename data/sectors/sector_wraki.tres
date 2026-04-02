@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SectorResource" load_steps=2 format=3 uid="uid://wraki_006"]
+
+[ext_resource type="Script" path="res://src/resources/sector_resource.gd" id="1_sector"]
+
+[resource]
+script = ExtResource("1_sector")
+id = "sector_wraki"
+display_name = "Cmentarzysko Wraków"
+description = "Gdzie spoczywają przegrani."
+difficulty_tier = 3
+hazard_type = "MINES"
+hazard_intensity = 0.5
+available_fish = []
+fish_rarity_multiplier = 1.4
+fog_density = 0.08
+water_color = Color(0.1, 0.1, 0.1, 1)

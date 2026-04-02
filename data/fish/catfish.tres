@@ -1,0 +1,14 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/resources/fish_resource.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "catfish"
+name = "Giant Catfish"
+description = "A massive predator that hunts only at night."
+base_weight = 12.0
+difficulty = 4.5
+value = 85
+rarity = 0.7
+is_nocturnal = true

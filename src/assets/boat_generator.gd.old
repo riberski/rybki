@@ -1,0 +1,91 @@
+@tool
+extends MeshInstance3D
+
+@export var hull_color: Color = Color(0.35, 0.25, 0.15) # Dark wood
+@export var trim_color: Color = Color(0.5, 0.35, 0.2)   # Lighter wood
+@export var inside_color: Color = Color(0.2, 0.15, 0.1) # Darker inside
+
+@export var model_scale: Vector3 = Vector3(0.1, 0.1, 0.1): 
+	set(val):
+		model_scale = val
+		update_transform()
+
+@export var base_rotation: Vector3 = Vector3(0, 180, 0): # Rotate 180 Y often fixes forward/back, user said upside down
+	set(val):
+		base_rotation = val
+		update_transform()
+
+@export var flip_mesh: bool = false:
+	set(val):
+		flip_mesh = val
+		update_transform()
+
+func _ready():
+	load_custom_model()
+	update_transform()
+
+func load_custom_model():
+	# Path to your uploaded OBJ
+	var model_path = "res://src/assets/lodeczka1.obj"
+	
+	if not FileAccess.file_exists(model_path):
+		printerr("Nie znaleziono pliku modelu: " + model_path)
+		return
+
+	# Load the resource dynamically
+	var res = load(model_path)
+	
+	if res is Mesh:
+		self.mesh = res
+	elif res is PackedScene:
+		# If imported as scene (Godot default for OBJ often), instantiate to extract mesh
+		var instance = res.instantiate()
+		var mesh_node = find_mesh_node(instance)
+		
+		if mesh_node and mesh_node.mesh:
+			self.mesh = mesh_node.mesh
+			# Try to get material from the imported mesh
+			var surf_mat = mesh_node.get_surface_override_material(0)
+			if not surf_mat and mesh_node.mesh.get_surface_count() > 0:
+				surf_mat = mesh_node.mesh.surface_get_material(0)
+			
+			if surf_mat:
+				self.material_override = surf_mat
+		
+		instance.free()
+	
+	# If no material found (OBJ often has none if MTL missing), apply default wood
+	if not self.mesh or (not self.mesh.surface_get_material(0) and not self.material_override):
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = hull_color
+		mat.roughness = 0.8
+		self.material_override = mat
+
+func find_mesh_node(node: Node) -> MeshInstance3D:
+	if node is MeshInstance3D:
+		return node
+	for child in node.get_children():
+		var found = find_mesh_node(child)
+		if found: return found
+	return null
+
+func update_transform():
+	scale = model_scale
+	rotation_degrees = base_rotation
+	
+	if flip_mesh:
+		rotation_degrees.z += 180
+		position.y = 0.3
+	else:
+		# If it's upside down by default (user said "do góry nogami"), 
+		# we might need to flip Z to start, or maybe just rotate X.
+		# But since they imported an OBJ, it's often huge and rotated.
+		# Setting scale to 0.1 helps "za duza".
+		# If it's upside down, maybe adjust base_rotation or just flip_mesh?
+		# Let's assume standard orientation and let user tweak via inspector.
+		pass
+
+
+# Stub for compatibility
+func generate_boat():
+	pass

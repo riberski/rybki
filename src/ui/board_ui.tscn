@@ -1,0 +1,254 @@
+[gd_scene load_steps=5 format=3 uid="uid://djke82k2fw5xu"]
+
+[ext_resource type="Script" uid="uid://bgr3g7p0h20fa" path="res://src/ui/board_ui.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="1"]
+bg_color = Color(0.0823529, 0.0705882, 0.054902, 1)
+border_color = Color(0.262745, 0.215686, 0.164706, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+content_margin_left = 18.0
+content_margin_top = 18.0
+content_margin_right = 18.0
+content_margin_bottom = 18.0
+
+[sub_resource type="StyleBoxFlat" id="2"]
+bg_color = Color(0.109804, 0.0901961, 0.0705882, 0.97)
+border_color = Color(0.27451, 0.231373, 0.176471, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+content_margin_left = 14.0
+content_margin_top = 12.0
+content_margin_right = 14.0
+content_margin_bottom = 12.0
+
+[node name="BoardUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0666667, 0.0588235, 0.0470588, 1)
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -390.0
+offset_top = -305.0
+offset_right = 390.0
+offset_bottom = 305.0
+theme_override_styles/panel = SubResource("1")
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Header" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="LeftPageButton" type="Button" parent="Panel/VBox/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(64, 44)
+text = "<"
+
+[node name="HeaderInfo" type="VBoxContainer" parent="Panel/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="Panel/VBox/Header/HeaderInfo"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Tablica portowa"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Panel/VBox/Header/HeaderInfo"]
+layout_mode = 2
+text = "Przewijaj ekrany strzalkami lewo/prawo"
+horizontal_alignment = 1
+
+[node name="PageLabel" type="Label" parent="Panel/VBox/Header/HeaderInfo"]
+layout_mode = 2
+text = "Rozwoj lodki (1/3)"
+horizontal_alignment = 1
+
+[node name="RightPageButton" type="Button" parent="Panel/VBox/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(64, 44)
+text = ">"
+
+[node name="Pages" type="Control" parent="Panel/VBox"]
+custom_minimum_size = Vector2(0, 360)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PageBoatDev" type="VBoxContainer" parent="Panel/VBox/Pages"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="BoatDevInfo" type="Label" parent="Panel/VBox/Pages/PageBoatDev"]
+layout_mode = 2
+text = "Ulepsz i przygotuj lodz"
+autowrap_mode = 2
+
+[node name="BoatCurrentLabel" type="Label" parent="Panel/VBox/Pages/PageBoatDev"]
+layout_mode = 2
+text = "Aktualna lodz: --"
+
+[node name="BoatCreditLabel" type="Label" parent="Panel/VBox/Pages/PageBoatDev"]
+layout_mode = 2
+text = "Kredyt wyprawy: $0"
+
+[node name="BoatNextLabel" type="Label" parent="Panel/VBox/Pages/PageBoatDev"]
+layout_mode = 2
+text = "Nastepna lodz: --"
+
+[node name="BoatButtons" type="HBoxContainer" parent="Panel/VBox/Pages/PageBoatDev"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PrevBoatButton" type="Button" parent="Panel/VBox/Pages/PageBoatDev/BoatButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 46)
+text = "Poprzednia lodz"
+
+[node name="NextBoatButton" type="Button" parent="Panel/VBox/Pages/PageBoatDev/BoatButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 46)
+text = "Nastepna lodz"
+
+[node name="BuyBoatButton" type="Button" parent="Panel/VBox/Pages/PageBoatDev/BoatButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 46)
+text = "Kup lodz"
+
+[node name="BuyCrateButton" type="Button" parent="Panel/VBox/Pages/PageBoatDev"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 48)
+text = "Kup skrzynke perkow"
+
+[node name="PageFinances" type="VBoxContainer" parent="Panel/VBox/Pages"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="FinancesInfo" type="Label" parent="Panel/VBox/Pages/PageFinances"]
+layout_mode = 2
+text = "Operacje finansowe i kontrakty"
+autowrap_mode = 2
+
+[node name="MoneyLabel" type="Label" parent="Panel/VBox/Pages/PageFinances"]
+layout_mode = 2
+text = "Gotowka: $0"
+
+[node name="PendingFishLabel" type="Label" parent="Panel/VBox/Pages/PageFinances"]
+layout_mode = 2
+text = "Ryby do odebrania: 0"
+
+[node name="ContractValueLabel" type="Label" parent="Panel/VBox/Pages/PageFinances"]
+layout_mode = 2
+text = "Wartosc kontraktu: --"
+
+[node name="ContractStatusLabel" type="Label" parent="Panel/VBox/Pages/PageFinances"]
+layout_mode = 2
+text = "Status: --"
+
+[node name="SellAllButton" type="Button" parent="Panel/VBox/Pages/PageFinances"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 48)
+text = "Sprzedaj wszystkie ryby"
+
+[node name="ClaimFishButton" type="Button" parent="Panel/VBox/Pages/PageFinances"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 48)
+text = "Odbierz ryby"
+
+[node name="ContractButton" type="Button" parent="Panel/VBox/Pages/PageFinances"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 48)
+text = "Przyjmij kontrakt"
+
+[node name="PageExpedition" type="VBoxContainer" parent="Panel/VBox/Pages"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="ExpeditionInfo" type="Label" parent="Panel/VBox/Pages/PageExpedition"]
+layout_mode = 2
+text = "Plan i start wyprawy"
+autowrap_mode = 2
+
+[node name="ExpeditionPositiveLabel" type="Label" parent="Panel/VBox/Pages/PageExpedition"]
+layout_mode = 2
+text = "+ --"
+
+[node name="ExpeditionNegativeLabel" type="Label" parent="Panel/VBox/Pages/PageExpedition"]
+layout_mode = 2
+text = "- --"
+
+[node name="StartRunButton" type="Button" parent="Panel/VBox/Pages/PageExpedition"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 50)
+text = "Wyplyn"
+
+[node name="BottomRow" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ReturnMenuButton" type="Button" parent="Panel/VBox/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 42)
+text = "Powrot do menu"
+
+[node name="CloseButton" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 42)
+text = "Zamknij (Esc)"
