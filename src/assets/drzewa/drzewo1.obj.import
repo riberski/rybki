@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://6iq5p7o5fady"
+path="res://.godot/imported/drzewo1.obj-4f352bda50e4479a55bd651764e1e918.mesh"
+
+[deps]
+
+files=["res://.godot/imported/drzewo1.obj-4f352bda50e4479a55bd651764e1e918.mesh"]
+
+source_file="res://src/assets/drzewa/drzewo1.obj"
+dest_files=["res://.godot/imported/drzewo1.obj-4f352bda50e4479a55bd651764e1e918.mesh", "res://.godot/imported/drzewo1.obj-4f352bda50e4479a55bd651764e1e918.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false
