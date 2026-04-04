@@ -11,13 +11,13 @@ extends Node3D
 var world_env: WorldEnvironment
 var rain_instance: GPUParticles3D
 var player_instance: Node3D
-var extraction_zone_instance: Area3D
+var extraction_zone_instances: Array[Area3D] = []
 
 func _ready():
 	_cleanup_legacy_world_chunks()
 	setup_environment()
 	spawn_player()
-	spawn_extraction_zone()
+	spawn_extraction_zones()
 	# spawn_shop() # Shop is now in Main3D.tscn
 	spawn_obstacles()
 
@@ -87,6 +87,8 @@ func _process(delta):
 		var pos = player_instance.global_position
 		rain_instance.global_position = Vector3(pos.x, pos.y + 10.0, pos.z)
 
+	_update_extraction_point_activity()
+
 
 func spawn_player():
 	player_instance = player_scene.instantiate()
@@ -134,57 +136,113 @@ func spawn_obstacles():
 		else:
 			rock.queue_free()
 
-func spawn_extraction_zone() -> void:
+func spawn_extraction_zones() -> void:
 	if extraction_zone_script == null:
 		return
 
-	extraction_zone_instance = Area3D.new()
-	extraction_zone_instance.name = "ExtractionZone"
-	extraction_zone_instance.set_script(extraction_zone_script)
-	add_child(extraction_zone_instance)
+	var points = [
+		{"name": "ExtractionStatic", "type": 0, "window": Vector2i(0, 1200), "capacity": 99},
+		{"name": "ExtractionDynamic", "type": 1, "window": Vector2i(45, 1200), "capacity": 1},
+		{"name": "ExtractionHidden", "type": 2, "window": Vector2i(0, 1200), "capacity": 1},
+		{"name": "ExtractionEmergency", "type": 3, "window": Vector2i(0, 1200), "capacity": 1}
+	]
 
-	if extraction_zone_instance.has_method("initialize_visuals"):
-		extraction_zone_instance.initialize_visuals()
+	for point in points:
+		var zone := Area3D.new()
+		zone.name = str(point["name"])
+		zone.set_script(extraction_zone_script)
+		add_child(zone)
+		if zone.has_method("initialize_visuals"):
+			zone.initialize_visuals()
+		if zone.has_method("configure"):
+			zone.configure(int(point["type"]), point["window"], int(point["capacity"]))
+		extraction_zone_instances.append(zone)
 
-	_randomize_extraction_zone_position()
+	_randomize_extraction_zone_positions()
 
 func _on_extraction_started(_total_seconds: int) -> void:
-	_randomize_extraction_zone_position()
+	_randomize_extraction_zone_positions()
+	for zone in extraction_zone_instances:
+		if not is_instance_valid(zone):
+			continue
+		var point_type := int(zone.get("point_type"))
+		if zone.has_method("set_active"):
+			# Hidden point stays dark until discovered.
+			zone.set_active(point_type != 2)
 	if player_instance and player_instance.has_method("show_notification"):
 		player_instance.show_notification("Nowy punkt ekstrakcji zostal oznaczony", 2.2)
 
 func _on_extraction_finished(reason: String) -> void:
-	if reason != "zone_extract" and reason != "timeout":
-		return
 	if InventoryManager:
 		InventoryManager.save_game()
 	get_tree().call_deferred("change_scene_to_file", "res://src/ui/lobby_world.tscn")
 
-func _randomize_extraction_zone_position() -> void:
-	if extraction_zone_instance == null:
+func _randomize_extraction_zone_positions() -> void:
+	if extraction_zone_instances.is_empty():
 		return
 
 	var min_coord := -20.0
 	var max_coord := 20.0
 	var dock_pos := Vector3(0.0, 0.0, 5.0)
-	var chosen := Vector3(12.0, -0.45, -12.0)
-	var found := false
+	var used_positions: Array[Vector3] = []
 
-	for _attempt in range(40):
-		var candidate := Vector3(
-			randf_range(min_coord, max_coord),
-			-0.45,
-			randf_range(min_coord, max_coord)
-		)
-		if candidate.distance_to(dock_pos) < 10.0:
+	for zone in extraction_zone_instances:
+		if not is_instance_valid(zone):
 			continue
-		if player_instance and candidate.distance_to(player_instance.global_position) < 8.0:
+		var chosen := Vector3(12.0, -0.45, -12.0)
+		var found := false
+		for _attempt in range(50):
+			var candidate := Vector3(
+				randf_range(min_coord, max_coord),
+				-0.45,
+				randf_range(min_coord, max_coord)
+			)
+			if candidate.distance_to(dock_pos) < 9.0:
+				continue
+			if player_instance and candidate.distance_to(player_instance.global_position) < 8.0:
+				continue
+			var too_close := false
+			for used in used_positions:
+				if candidate.distance_to(used) < 7.0:
+					too_close = true
+					break
+			if too_close:
+				continue
+			chosen = candidate
+			found = true
+			break
+
+		if not found:
+			chosen = Vector3(randf_range(10.0, 16.0), -0.45, randf_range(-16.0, -10.0))
+		zone.global_position = chosen
+		used_positions.append(chosen)
+
+func _update_extraction_point_activity() -> void:
+	if TimeManager == null or extraction_zone_instances.is_empty():
+		return
+
+	var active := TimeManager.extraction_active
+	var elapsed := 0
+	if active:
+		elapsed = TimeManager.extraction_duration_seconds - int(ceil(TimeManager.extraction_remaining_seconds))
+
+	for zone in extraction_zone_instances:
+		if not is_instance_valid(zone):
 			continue
-		chosen = candidate
-		found = true
-		break
+		if not zone.has_method("set_active"):
+			continue
 
-	if not found:
-		chosen = Vector3(14.0, -0.45, -14.0)
+		var point_type := int(zone.get("point_type"))
+		var should_be_active := active
 
-	extraction_zone_instance.global_position = chosen
+		if point_type == 1:
+			# Dynamic extraction appears after early roam period.
+			should_be_active = active and elapsed >= 45
+		elif point_type == 2:
+			# Hidden extraction controls itself after discovery.
+			continue
+		elif point_type == 3:
+			# Emergency extraction only in final minute.
+			should_be_active = active and TimeManager.extraction_remaining_seconds <= 60.0
+
+		zone.set_active(should_be_active)

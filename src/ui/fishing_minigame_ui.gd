@@ -184,6 +184,7 @@ func start_minigame():
 	visible = true
 	_is_running = true
 	set_process(true)
+	fish_pause_timer = 0.18
 	
 	if not container: _setup_ui()
 	
@@ -214,7 +215,7 @@ func _process(delta):
 	_update_fish_behaviour(delta)
 	
 	# 2. Update Bar Physics (Reel action)
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) or Input.is_key_pressed(KEY_SPACE):
+	if Input.is_action_pressed("cast_rod") or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) or Input.is_key_pressed(KEY_SPACE):
 		bar_velocity += REEL_FORCE * delta
 	if minigame_bar_damping > 0.0:
 		bar_velocity = move_toward(bar_velocity, 0, minigame_bar_damping * delta)

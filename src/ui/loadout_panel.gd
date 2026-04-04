@@ -6,6 +6,20 @@ extends Control
 	$Panel/Margin/Root/RelicSlots/RelicSlot3,
 	$Panel/Margin/Root/RelicSlots/RelicSlot4
 ]
+@onready var module_slot_labels: Array = [
+	$Panel/Margin/Root/ModuleSlots/ModuleSlot1/ModuleLabel1,
+	$Panel/Margin/Root/ModuleSlots/ModuleSlot2/ModuleLabel2,
+	$Panel/Margin/Root/ModuleSlots/ModuleSlot3/ModuleLabel3,
+	$Panel/Margin/Root/ModuleSlots/ModuleSlot4/ModuleLabel4,
+	$Panel/Margin/Root/ModuleSlots/ModuleSlot5/ModuleLabel5
+]
+@onready var module_slot_buttons: Array = [
+	$Panel/Margin/Root/ModuleSlots/ModuleSlot1/ModuleOption1,
+	$Panel/Margin/Root/ModuleSlots/ModuleSlot2/ModuleOption2,
+	$Panel/Margin/Root/ModuleSlots/ModuleSlot3/ModuleOption3,
+	$Panel/Margin/Root/ModuleSlots/ModuleSlot4/ModuleOption4,
+	$Panel/Margin/Root/ModuleSlots/ModuleSlot5/ModuleOption5
+]
 @onready var upgrade_stat_buttons: Array = [
 	$Panel/Margin/Root/UpgradeSlots/UpgradeSlot1/UpgradeStat1,
 	$Panel/Margin/Root/UpgradeSlots/UpgradeSlot2/UpgradeStat2,
@@ -25,6 +39,8 @@ extends Control
 	$Panel/Margin/Root/UpgradeSlots/UpgradeSlot4/UpgradeButton4
 ]
 @onready var close_button: Button = $Panel/Margin/Root/CloseButton
+
+const MODULE_SLOT_IDS: Array[String] = ["engine_slot", "sonar_slot", "utility_slot_1", "utility_slot_2", "special_slot"]
 
 func _ready() -> void:
 	hide()
@@ -55,17 +71,38 @@ func _on_money_updated(_amount: int) -> void:
 func _setup_loadout_ui() -> void:
 	if not InventoryManager:
 		return
+	var owned_charms: Array[String] = InventoryManager.get_owned_charms()
 	for i in range(relic_slot_buttons.size()):
 		var btn = relic_slot_buttons[i]
 		btn.clear()
 		btn.add_item("(pusto)", 0)
-		var index = 1
-		for relic in RelicDatabase.all_relics:
-			btn.add_item(relic.get("name", "Relic"), index)
-			btn.set_item_metadata(index, relic.get("id", ""))
+		var index: int = 1
+		for charm_id in owned_charms:
+			var relic: Dictionary = RelicDatabase.get_relic_by_id(charm_id)
+			btn.add_item(str(relic.get("name", charm_id)), index)
+			btn.set_item_metadata(index, charm_id)
 			index += 1
 		if not btn.item_selected.is_connected(_on_relic_slot_selected):
 			btn.item_selected.connect(_on_relic_slot_selected.bind(i))
+
+	for i in range(module_slot_buttons.size()):
+		var slot_id: String = MODULE_SLOT_IDS[i]
+		if i < module_slot_labels.size():
+			var slot_label: Label = module_slot_labels[i]
+			slot_label.text = InventoryManager.get_boat_module_slot_label(slot_id)
+		var module_btn: OptionButton = module_slot_buttons[i]
+		module_btn.clear()
+		module_btn.add_item("(pusto)", 0)
+		module_btn.set_item_metadata(0, "")
+		var module_options: Array = InventoryManager.get_boat_module_options(slot_id)
+		var module_index := 1
+		for module_id in module_options:
+			module_btn.add_item(InventoryManager.get_boat_module_display_name(module_id), module_index)
+			module_btn.set_item_metadata(module_index, module_id)
+			module_index += 1
+		if not module_btn.item_selected.is_connected(_on_module_slot_selected):
+			module_btn.item_selected.connect(_on_module_slot_selected.bind(i))
+
 	for i in range(upgrade_stat_buttons.size()):
 		var stat_btn = upgrade_stat_buttons[i]
 		stat_btn.clear()
@@ -114,6 +151,18 @@ func _refresh_loadout_ui() -> void:
 		upgrade_buttons[i].text = "+ ($%d)" % cost
 		upgrade_buttons[i].disabled = stat_id == "" or not InventoryManager.can_afford(cost)
 
+	for i in range(module_slot_buttons.size()):
+		var slot_id: String = MODULE_SLOT_IDS[i]
+		var module_id: String = InventoryManager.get_boat_module_slot(InventoryManager.current_boat_id, slot_id)
+		var module_btn: OptionButton = module_slot_buttons[i]
+		var selected_module_index := 0
+		for idx in range(module_btn.get_item_count()):
+			if str(module_btn.get_item_metadata(idx)) == module_id:
+				selected_module_index = idx
+				break
+		module_btn.select(selected_module_index)
+		module_btn.tooltip_text = InventoryManager.get_boat_module_description(module_id)
+
 func _on_relic_slot_selected(index: int, slot_index: int) -> void:
 	if not InventoryManager:
 		return
@@ -139,3 +188,14 @@ func _on_upgrade_stat_pressed(slot_index: int) -> void:
 		return
 	if InventoryManager.upgrade_boat_stat(InventoryManager.current_boat_id, slot_index):
 		_refresh_loadout_ui()
+
+func _on_module_slot_selected(index: int, slot_index: int) -> void:
+	if not InventoryManager:
+		return
+	var slot_id: String = MODULE_SLOT_IDS[slot_index]
+	var module_btn: OptionButton = module_slot_buttons[slot_index]
+	var module_id := ""
+	if index > 0:
+		module_id = str(module_btn.get_item_metadata(index))
+	InventoryManager.set_boat_module_slot(InventoryManager.current_boat_id, slot_id, module_id)
+	_setup_loadout_ui()

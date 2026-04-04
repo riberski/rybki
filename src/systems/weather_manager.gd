@@ -2,7 +2,7 @@ extends Node
 
 signal weather_changed(new_weather: int)
 
-enum WeatherType { CLEAR, RAIN, FOG }
+enum WeatherType { CLEAR, RAIN, FOG, STORM }
 var current_weather: int = WeatherType.CLEAR
 
 var rain_particles: GPUParticles3D
@@ -10,8 +10,14 @@ var world_env: WorldEnvironment
 
 func _ready():
 	# Select random weather at start of expedition
-	var weather_types = [WeatherType.CLEAR, WeatherType.RAIN, WeatherType.FOG]
-	var random_weather = weather_types[randi() % weather_types.size()]
+	var roll := randf()
+	var random_weather := WeatherType.CLEAR
+	if roll < 0.12:
+		random_weather = WeatherType.STORM
+	elif roll < 0.42:
+		random_weather = WeatherType.RAIN
+	elif roll < 0.65:
+		random_weather = WeatherType.FOG
 	change_weather(random_weather)
 	# Weather stays the same for entire expedition - no timer
 
@@ -46,6 +52,12 @@ func apply_weather(type: int):
 			world_env.environment.fog_enabled = true
 			world_env.environment.fog_density = 0.08 # Thicker fog
 			world_env.environment.fog_light_color = Color(0.6, 0.6, 0.6)
+
+		WeatherType.STORM:
+			rain_particles.emitting = true
+			world_env.environment.fog_enabled = true
+			world_env.environment.fog_density = 0.12
+			world_env.environment.fog_light_color = Color(0.22, 0.24, 0.30)
 
 
 

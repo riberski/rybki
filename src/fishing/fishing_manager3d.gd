@@ -21,6 +21,7 @@ var bite_timer: Timer
 var hook_timer: Timer
 var line_mesh: ImmediateMesh
 var line_mesh_instance: MeshInstance3D
+var cast_landing_failsafe_timer: Timer
 
 # Fishing Params
 @export var throw_force: float = 15.0
@@ -31,6 +32,7 @@ var line_mesh_instance: MeshInstance3D
 @export var fish_escape_burst_frequency: float = 1.8
 var active_bait_stats = {"attraction": 1.0, "quality": 1.0}
 var current_fish: FishResource
+var current_fish_stamina: float = 100.0
 
 # Player Reference
 var player_ref: Node3D
@@ -49,9 +51,15 @@ func _ready():
 	add_child(hook_timer)
 	
 	player_ref = get_parent() # Assuming Player is parent
+	rod_tip = player_ref.find_child("RodTip", true, false) if player_ref else null
 	
 	# Setup Visuals
 	_setup_line_renderer()
+
+	cast_landing_failsafe_timer = Timer.new()
+	cast_landing_failsafe_timer.one_shot = true
+	cast_landing_failsafe_timer.timeout.connect(_on_cast_landing_failsafe_timeout)
+	add_child(cast_landing_failsafe_timer)
 
 	if minigame_ui_path != NodePath(""):
 		minigame_ui = get_node_or_null(minigame_ui_path)
@@ -82,6 +90,8 @@ func _add_line_to_scene():
 func _exit_tree():
 	if is_instance_valid(line_mesh_instance):
 		line_mesh_instance.queue_free()
+	if cast_landing_failsafe_timer:
+		cast_landing_failsafe_timer.stop()
 
 func _process(_delta):
 	_update_line_visual()
@@ -89,6 +99,10 @@ func _process(_delta):
 	if current_state == State.WAITING:
 		if bobber_instance and bobber_instance.global_position.y < -10:
 			# Failsafe if bobber falls out of world
+			reset_fishing()
+	elif current_state == State.CASTING:
+		if bobber_instance and bobber_instance.global_position.y < -20:
+			# Hard fail-safe: invalid cast trajectory/out of world.
 			reset_fishing()
 
 func _physics_process(delta):
@@ -108,6 +122,7 @@ func _physics_process(delta):
 			var fish_difficulty = 1.0
 			if current_fish:
 				fish_difficulty = float(current_fish.difficulty)
+			var stamina_factor: float = float(clamp(current_fish_stamina / 100.0, 0.65, 1.8))
 			var boat_speed = 8.0
 			if player_ref and player_ref.has_method("get"):
 				var speed_value = player_ref.get("speed")
@@ -123,6 +138,7 @@ func _physics_process(delta):
 			# Rare fish flee faster, capped below boat speed
 			run_force *= lerp(1.0, 1.5, clamp(rarity, 0.0, 1.0))
 			run_force *= fish_escape_multiplier
+			run_force *= stamina_factor
 			var burst_phase = max(0.0, sin(Time.get_ticks_msec() / 1000.0 * fish_escape_burst_frequency * wiggle_mult))
 			var burst = lerp(1.0, fish_escape_burst_strength, burst_phase)
 			run_force *= burst
@@ -137,6 +153,7 @@ func _physics_process(delta):
 				var boat_body := player_ref as CharacterBody3D
 				var pull_strength = fish_pull_boat_base + (fish_difficulty * 0.9)
 				pull_strength *= lerp(1.0, 1.6, clamp(rarity, 0.0, 1.0))
+				pull_strength *= lerp(0.85, 1.35, clamp(stamina_factor - 0.65, 0.0, 1.15))
 				if InventoryManager:
 					pull_strength *= InventoryManager.fish_run_force_multiplier
 				pull_strength = clamp(pull_strength, 0.0, fish_pull_boat_max)
@@ -192,6 +209,8 @@ func start_casting(origin: Vector3, direction: Vector3, charge: float = 1.0):
 	bobber_instance = bobber_scene.instantiate()
 	get_tree().current_scene.add_child(bobber_instance)
 	bobber_instance.global_position = origin
+	if bobber_instance.has_signal("bobber_landed") and not bobber_instance.bobber_landed.is_connected(_on_bobber_landed):
+		bobber_instance.bobber_landed.connect(_on_bobber_landed)
 	
 	# 4. Apply Physics
 	active_bait_stats = active_bait
@@ -207,17 +226,19 @@ func start_casting(origin: Vector3, direction: Vector3, charge: float = 1.0):
 		var cast_mult = 1.0
 		if InventoryManager:
 			cast_mult *= InventoryManager.cast_force_multiplier
-		var impulse = direction.normalized() * (throw_force * charge * mult * cast_mult)
+		var safe_charge = clamp(charge, 0.55, 1.8)
+		var impulse = direction.normalized() * (throw_force * safe_charge * mult * cast_mult)
 		impulse.y += 2.0 
 		bobber_instance.apply_central_impulse(impulse)
 	
-	# 5. Wait for "Splash" / Landed
-	# Simulate landing for now
-	await get_tree().create_timer(1.0).timeout
-	if current_state == State.CASTING:
-		_on_bobber_landed()
+	# 5. Wait for physical splash event. Fallback timer covers edge cases.
+	cast_landing_failsafe_timer.start(2.2)
 
 func _on_bobber_landed():
+	if current_state != State.CASTING:
+		return
+	if cast_landing_failsafe_timer:
+		cast_landing_failsafe_timer.stop()
 	current_state = State.WAITING
 	print("Bobber landed. Waiting...")
 	
@@ -234,6 +255,7 @@ func _on_bite_timeout():
 	
 	current_state = State.BITING
 	print("BITE!")
+	_notify_player("Fish on! Reel now", 1.0)
 	if RunMetrics:
 		RunMetrics.record_bite()
 	emit_signal("bite_hooked")
@@ -251,7 +273,12 @@ func _on_bite_timeout():
 	var hook_window = 1.0
 	if InventoryManager:
 		hook_window *= InventoryManager.hook_window_multiplier
+	hook_window = clamp(hook_window, 0.35, 2.0)
 	hook_timer.start(hook_window)
+
+func _on_cast_landing_failsafe_timeout():
+	if current_state == State.CASTING:
+		_on_bobber_landed()
 
 func _on_hook_timeout():
 	if current_state == State.BITING:
@@ -291,11 +318,24 @@ func start_minigame():
 	current_state = State.REELING
 	
 	# Pick Fish
-	current_fish = FishDatabase.get_random_fish()
+	var bait_id := ""
+	if InventoryManager:
+		bait_id = InventoryManager.current_bait_id
+	var is_night := false
+	if TimeManager:
+		is_night = TimeManager.is_night()
+	var risk_level := 0.0
+	if RiskManager:
+		risk_level = RiskManager.get_current_risk_level()
+	if FishDatabase and FishDatabase.has_method("get_random_fish_for_context"):
+		current_fish = FishDatabase.get_random_fish_for_context(bait_id, is_night, risk_level)
+	else:
+		current_fish = FishDatabase.get_random_fish()
 	if not current_fish:
 		print("Error: No fish found in database!")
 		reset_fishing()
 		return
+	current_fish_stamina = max(1.0, float(current_fish.stamina))
 		
 	# Find UI if needed
 	if not minigame_ui:
@@ -309,6 +349,7 @@ func start_minigame():
 	
 	if minigame_ui:
 		var speed_multiplier = 1.0
+		speed_multiplier *= lerp(1.0, 1.22, clamp(risk_level / 100.0, 0.0, 1.0))
 		if QuestManager and not QuestManager.active_quest.is_empty():
 			var active = QuestManager.active_quest
 			if active.get("type", "") == "earn_money":
@@ -372,6 +413,10 @@ func _check_resource_end():
 	check_for_turn_end()
 
 func reset_fishing():
+	bite_timer.stop()
+	hook_timer.stop()
+	if cast_landing_failsafe_timer:
+		cast_landing_failsafe_timer.stop()
 	current_state = State.IDLE
 	if is_instance_valid(bobber_instance):
 		bobber_instance.queue_free()

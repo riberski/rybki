@@ -37,6 +37,8 @@ extends Control
 	$Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/RelicSlots/RelicSlot3,
 	$Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/RelicSlots/RelicSlot4
 ]
+@onready var roll_charm_button: Button = $Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/CharmRollRow/RollCharmButton
+@onready var charm_status_label: Label = $Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/CharmStatus
 @onready var upgrade_stat_buttons: Array = [
 	$Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot1/UpgradeStat1,
 	$Margin/Root/LeftPanel/MetaWidgets/BoatLoadout/BoatLoadoutBox/UpgradeSlots/UpgradeSlot2/UpgradeStat2,
@@ -92,6 +94,8 @@ func _ready() -> void:
 	_play_intro_motion()
 	if buy_crate_button and not buy_crate_button.pressed.is_connected(_on_buy_crate_button_pressed):
 		buy_crate_button.pressed.connect(_on_buy_crate_button_pressed)
+	if roll_charm_button and not roll_charm_button.pressed.is_connected(_on_roll_charm_button_pressed):
+		roll_charm_button.pressed.connect(_on_roll_charm_button_pressed)
 	if contract_accept_button and not contract_accept_button.pressed.is_connected(_on_contract_accept_button_pressed):
 		contract_accept_button.pressed.connect(_on_contract_accept_button_pressed)
 	if boat_buy_button and not boat_buy_button.pressed.is_connected(_on_buy_boat_button_pressed):
@@ -144,6 +148,7 @@ func _apply_visual_polish() -> void:
 	_apply_button_theme(claim_fish_button, success)
 	_apply_button_theme(sell_all_button, success)
 	_apply_button_theme(return_menu_button, danger)
+	_apply_button_theme(roll_charm_button, warning)
 
 	for nav_btn in [
 		nav_start_run,
@@ -252,6 +257,8 @@ func _connect_signals() -> void:
 			InventoryManager.boat_changed.connect(_on_boat_changed)
 		if not InventoryManager.expedition_credit_updated.is_connected(_on_expedition_credit_updated):
 			InventoryManager.expedition_credit_updated.connect(_on_expedition_credit_updated)
+		if not InventoryManager.charms_changed.is_connected(_on_charms_changed):
+			InventoryManager.charms_changed.connect(_on_charms_changed)
 
 	if QuotaManager:
 		if not QuotaManager.hull_updated.is_connected(_on_hull_updated):
@@ -436,6 +443,14 @@ func _refresh_stats() -> void:
 		buy_crate_button.text = "Kup skrzynke perkow ($%d)" % crate_cost
 		var can_buy: bool = bool(InventoryManager.can_afford(crate_cost))
 		buy_crate_button.disabled = not can_buy
+		if roll_charm_button:
+			var charm_roll_cost: int = int(InventoryManager.get_charm_roll_cost())
+			roll_charm_button.text = "Losuj charm ($%d)" % charm_roll_cost
+			roll_charm_button.disabled = not InventoryManager.can_afford(charm_roll_cost) or InventoryManager.get_available_charm_roll_count() <= 0
+		if charm_status_label and RelicDatabase:
+			var owned_count: int = int(InventoryManager.get_owned_charms().size())
+			var total_count: int = int(RelicDatabase.all_relics.size())
+			charm_status_label.text = "Charmy: %d / %d" % [owned_count, total_count]
 
 func _update_lobby_widgets() -> void:
 	if challenge_ui and challenge_ui.has_method("update_ui"):
@@ -475,6 +490,10 @@ func _on_inventory_updated(_item) -> void:
 	_refresh_stats()
 
 func _on_pending_fish_changed(_count: int) -> void:
+	_refresh_stats()
+
+func _on_charms_changed() -> void:
+	_setup_loadout_ui()
 	_refresh_stats()
 
 func _on_boat_changed(_boat_id: String) -> void:
@@ -673,14 +692,17 @@ func _on_boat_selected(index: int) -> void:
 func _setup_loadout_ui() -> void:
 	if not InventoryManager:
 		return
+	var owned_charms: Array[String] = InventoryManager.get_owned_charms()
 	for i in range(relic_slot_buttons.size()):
 		var btn: OptionButton = relic_slot_buttons[i] as OptionButton
 		btn.clear()
 		btn.add_item("(pusto)", 0)
-		var index = 1
-		for relic in RelicDatabase.all_relics:
-			btn.add_item(relic.get("name", "Relic"), index)
-			btn.set_item_metadata(index, relic.get("id", ""))
+		var index: int = 1
+		for charm_id in owned_charms:
+			var relic: Dictionary = RelicDatabase.get_relic_by_id(charm_id)
+			var relic_name: String = str(relic.get("name", charm_id))
+			btn.add_item(relic_name, index)
+			btn.set_item_metadata(index, charm_id)
 			index += 1
 		if not btn.item_selected.is_connected(_on_relic_slot_selected):
 			btn.item_selected.connect(_on_relic_slot_selected.bind(i))
@@ -741,6 +763,20 @@ func _on_relic_slot_selected(index: int, slot_index: int) -> void:
 		relic_id = str(btn.get_item_metadata(index))
 	InventoryManager.set_boat_relic_slot(InventoryManager.current_boat_id, slot_index, relic_id)
 	_refresh_loadout_ui()
+
+func _on_roll_charm_button_pressed() -> void:
+	if not InventoryManager:
+		return
+	var roll_result: Dictionary = InventoryManager.roll_random_charm()
+	if bool(roll_result.get("ok", false)):
+		if charm_status_label:
+			charm_status_label.text = "Wylosowano: %s" % str(roll_result.get("charm_name", "Charm"))
+		_setup_loadout_ui()
+		_refresh_loadout_ui()
+		_refresh_stats()
+	else:
+		if charm_status_label:
+			charm_status_label.text = str(roll_result.get("reason", "Nie udalo sie wylosowac"))
 
 func _on_upgrade_stat_selected(index: int, slot_index: int) -> void:
 	if not InventoryManager:

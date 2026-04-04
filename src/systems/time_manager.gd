@@ -46,6 +46,7 @@ func start_extraction() -> void:
 	current_time = 6.0
 	if InventoryManager:
 		InventoryManager.apply_boat_loadout()
+		InventoryManager.reset_boat_durability_for_expedition()
 		InventoryManager.start_expedition_credit()
 		InventoryManager.generate_expedition_modifiers()
 	if RunMetrics:
@@ -80,11 +81,14 @@ func finish_extraction(reason: String = "early_return") -> void:
 		if InventoryManager:
 			InventoryManager.complete_expedition_to_pending()
 	else:
-		# Timeout, early return, or other reasons - fish are lost
+		# Timeout, emergency, or other reasons - partial salvage with soft-loss rules.
 		if InventoryManager:
 			if reason == "timeout" and InventoryManager.has_method("apply_timeout_upgrade_penalty"):
 				InventoryManager.apply_timeout_upgrade_penalty()
-			InventoryManager.discard_expedition()
+			if InventoryManager.has_method("handle_expedition_failure_with_soft_loss"):
+				InventoryManager.handle_expedition_failure_with_soft_loss(reason == "timeout")
+			else:
+				InventoryManager.discard_expedition()
 	if InventoryManager:
 		if not InventoryManager.is_expedition_credit_paid():
 			InventoryManager.handle_expedition_credit_failure()
@@ -96,6 +100,11 @@ func finish_extraction(reason: String = "early_return") -> void:
 	if QuotaManager:
 		QuotaManager.check_run_status()
 	_is_finishing_extraction = false
+
+func trigger_emergency_state(reason: String = "boat_destroyed") -> void:
+	if not extraction_active:
+		return
+	finish_extraction(reason)
 
 func _process(delta):
 	if extraction_active:
