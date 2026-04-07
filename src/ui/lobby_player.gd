@@ -27,7 +27,7 @@ func _ready() -> void:
 	_setup_locomotion_animations()
 	set_physics_process(true)
 	set_process_unhandled_input(true)
-	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _ensure_lobby_camera_setup() -> void:
 	if camera_3d:

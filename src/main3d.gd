@@ -8,10 +8,18 @@ extends Node3D
 
 @onready var sun_light = $DirectionalLight3D
 @onready var sun_visual = $SunVisual
+@onready var existing_world_env: WorldEnvironment = get_node_or_null("WorldEnvironment")
 var world_env: WorldEnvironment
 var rain_instance: GPUParticles3D
 var player_instance: Node3D
 var extraction_zone_instances: Array[Area3D] = []
+
+@export var sun_orbit_radius: float = 220.0
+@export var sun_azimuth_degrees: float = 35.0
+@export var daylight_energy: float = 1.15
+@export var night_energy: float = 0.05
+@export_file("*.hdr", "*.exr", "*.png", "*.jpg", "*.jpeg") var hdri_sky_path: String = "res://src/assets/hdri/sky.exr"
+@export var hdri_sky_energy: float = 1.0
 
 func _ready():
 	_cleanup_legacy_world_chunks()
@@ -41,17 +49,22 @@ func _setup_weather_manager():
 	WeatherManager.set_environment_references(world_env, rain_instance)
 
 func setup_environment():
-	# Create WorldEnvironment dynamically if not present
-	world_env = WorldEnvironment.new()
-	var env = Environment.new()
-	env.background_mode = Environment.BG_SKY
-	var sky = Sky.new()
-	sky.sky_material = ProceduralSkyMaterial.new()
-	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	world_env.environment = env
-	add_child(world_env)
+	# Reuse scene WorldEnvironment when available to keep map authoring intact.
+	if existing_world_env:
+		world_env = existing_world_env
+		if world_env.environment == null:
+			world_env.environment = Environment.new()
+	else:
+		world_env = WorldEnvironment.new()
+		var env := Environment.new()
+		_configure_default_environment(env)
+		world_env.environment = env
+		add_child(world_env)
+
+	if world_env and world_env.environment:
+		if not _apply_hdri_sky(world_env.environment):
+			# Keep a usable sky when no HDRI file is present yet.
+			_configure_default_environment(world_env.environment)
 	
 	# Create Rain Particles (attached to camera or player later)
 	rain_instance = rain_scene.instantiate()
@@ -59,28 +72,40 @@ func setup_environment():
 	rain_instance.position = Vector3(0, 10, 0) # Start high
 	rain_instance.emitting = false
 
+func _configure_default_environment(env: Environment) -> void:
+	env.background_mode = Environment.BG_SKY
+	if env.sky == null:
+		var sky := Sky.new()
+		sky.sky_material = ProceduralSkyMaterial.new()
+		env.sky = sky
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+
+func _apply_hdri_sky(env: Environment) -> bool:
+	if hdri_sky_path.strip_edges().is_empty():
+		return false
+	if not ResourceLoader.exists(hdri_sky_path):
+		return false
+
+	var loaded := load(hdri_sky_path)
+	if loaded == null or not (loaded is Texture2D):
+		return false
+
+	var panorama := PanoramaSkyMaterial.new()
+	panorama.panorama = loaded as Texture2D
+	panorama.energy_multiplier = hdri_sky_energy
+
+	var sky := Sky.new()
+	sky.sky_material = panorama
+
+	env.background_mode = Environment.BG_SKY
+	env.sky = sky
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	return true
+
 func _process(delta):
-	# Update sun
-	if sun_light:
-		var time = TimeManager.current_time
-		# Rotate sun around X. 
-		# We need to map 0..24 to a full rotation.
-		# Noon (12) is -90.
-		# Sunrise (6) is 0 (or -180 depending on orientation). 
-		# Let's say Sunrise is at X=0 (Horizon), Noon is X=-90.
-		var rot_x = -(time - 6.0) * 15.0
-		sun_light.rotation_degrees.x = rot_x
-		
-		# Move visible sun sphere to match light direction.
-		if sun_visual:
-			var dir = -sun_light.global_transform.basis.z
-			var center = Vector3.ZERO
-			if player_instance:
-				center = player_instance.global_position
-			sun_visual.global_position = center + (dir * 200.0)
-		
-		# Optional: Adjust color/energy based on time?
-		# Currently simple rotation.
+	_update_sun_and_lighting()
 		
 	# Update Rain Position
 	if rain_instance and player_instance:
@@ -246,3 +271,48 @@ func _update_extraction_point_activity() -> void:
 			should_be_active = active and TimeManager.extraction_remaining_seconds <= 60.0
 
 		zone.set_active(should_be_active)
+
+func _update_sun_and_lighting() -> void:
+	if sun_light == null:
+		return
+
+	var time_of_day: float = 12.0
+	if TimeManager:
+		time_of_day = TimeManager.current_time
+
+	# 0..1 normalized day progress
+	var day_t: float = fposmod(time_of_day, 24.0) / 24.0
+	var sun_angle: float = day_t * TAU
+
+	# Elevation curve: max at noon, below horizon at night
+	var elevation_raw: float = sin(sun_angle - PI * 0.5)
+	var elevation_norm: float = clamp((elevation_raw + 1.0) * 0.5, 0.0, 1.0)
+	var daylight_factor: float = clamp((elevation_raw + 0.08) / 1.08, 0.0, 1.0)
+
+	# Azimuth drift gives side-to-side sun travel across sky.
+	var azimuth_rad: float = deg_to_rad(sun_azimuth_degrees)
+	var horizontal: float = cos(sun_angle - PI * 0.5)
+	var sun_dir := Vector3(
+		horizontal * cos(azimuth_rad),
+		elevation_raw,
+		horizontal * sin(azimuth_rad)
+	).normalized()
+
+	# Directional light points along its -Z axis.
+	sun_light.look_at(sun_light.global_position + sun_dir, Vector3.UP)
+	sun_light.light_energy = lerp(night_energy, daylight_energy, daylight_factor)
+	sun_light.light_color = Color(
+		lerp(0.50, 1.0, elevation_norm),
+		lerp(0.58, 0.96, elevation_norm),
+		lerp(0.75, 0.86, elevation_norm)
+	)
+
+	if world_env and world_env.environment:
+		world_env.environment.ambient_light_energy = lerp(0.22, 0.72, daylight_factor)
+
+	if sun_visual:
+		var center := Vector3.ZERO
+		if player_instance:
+			center = player_instance.global_position
+		sun_visual.global_position = center + (sun_dir * sun_orbit_radius)
+		sun_visual.visible = elevation_raw > -0.18

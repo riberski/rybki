@@ -50,6 +50,7 @@ func _ready() -> void:
 		board_area.collision_mask = 1
 		board_area.body_entered.connect(_on_board_area_entered)
 		board_area.body_exited.connect(_on_board_area_exited)
+	_set_board_mode(false)
 
 func _process(_delta: float) -> void:
 	if board_open:
@@ -188,36 +189,33 @@ func _can_use_board() -> bool:
 	return false
 
 func _open_board() -> void:
-	board_open = true
 	popup.visible = false
 	_previous_mouse_mode = Input.get_mouse_mode()
-	if board_camera:
-		board_camera.current = true
-	if player_camera:
-		player_camera.current = false
-	if lobby_player:
-		lobby_player.set_physics_process(false)
-		lobby_player.set_process_input(false)
-		lobby_player.set_process_unhandled_input(false)
+	_set_board_mode(true)
 	if board_ui_overlay:
 		board_ui_overlay.show()
 		if board_ui_overlay.has_method("_refresh_all"):
 			board_ui_overlay.call("_refresh_all")
-	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 func _close_board() -> void:
-	board_open = false
-	if board_camera:
-		board_camera.current = false
-	if player_camera:
-		player_camera.current = true
-	if lobby_player:
-		lobby_player.set_physics_process(true)
-		lobby_player.set_process_input(true)
-		lobby_player.set_process_unhandled_input(true)
+	_set_board_mode(false)
 	if board_ui_overlay:
 		board_ui_overlay.hide()
-	Input.set_mouse_mode(_previous_mouse_mode)
+	# Always return to mouselook after board is closed.
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+func _set_board_mode(active: bool) -> void:
+	board_open = active
+	if board_camera:
+		board_camera.current = active
+	if player_camera:
+		player_camera.current = not active
+	if lobby_player:
+		lobby_player.set_physics_process(not active)
+		lobby_player.set_process_input(not active)
+		lobby_player.set_process_unhandled_input(not active)
+	if active:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 func _execute_option(option_id: String) -> void:
 	match option_id:
