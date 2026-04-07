@@ -32,7 +32,7 @@ var _is_running: bool = false
 var _difficulty: float = 1.0
 var distance_modifier: float = 1.0 # Distance impacts bar size
 var fish_speed_multiplier: float = 1.0 # Contract-specific speed scaling
-var global_fish_speed_boost: float = 1.35 # Make minigame feel like chasing fish
+var global_fish_speed_boost: float = 1.22 # Calmer minigame fish movement
 var minigame_fail_grace_active: bool = false
 var minigame_fail_grace_amount: float = 0.15
 var minigame_start_floor: float = 0.0
@@ -40,6 +40,8 @@ var minigame_bar_damping: float = 0.0
 var minigame_bar_min_size: float = 30.0
 var minigame_fish_stability_multiplier: float = 1.0
 var minigame_dart_speed_multiplier: float = 1.0
+var min_progress_reached: float = 1.0
+var near_miss_recovery: bool = false
 
 # UI Nodes
 var container: Panel
@@ -52,7 +54,7 @@ var progress_rect: ColorRect
 var active_behavior = "Mixed"
 var behavior_timer = 0.0
 
-func setup_game(fish_resource: FishResource, speed_multiplier: float = 1.0):
+func setup_game(fish_resource: FishResource, speed_multiplier: float = 1.0, override_behavior: String = ""):
 	var difficulty = fish_resource.difficulty # 1.0 to 5.0 typically
 	fish_speed_multiplier = max(0.1, speed_multiplier) * global_fish_speed_boost
 	GRAVITY = 0.85
@@ -109,6 +111,8 @@ func setup_game(fish_resource: FishResource, speed_multiplier: float = 1.0):
 			start_progress = 1.0
 			
 	catch_progress = clamp(start_progress, 0.0, 1.0)
+	min_progress_reached = catch_progress
+	near_miss_recovery = false
 
 	bar_position = 0.0
 	bar_velocity = 0.0
@@ -116,7 +120,9 @@ func setup_game(fish_resource: FishResource, speed_multiplier: float = 1.0):
 	fish_target = 0.5
 	fish_timer = 0.0
 	
-	if "behavior_type" in fish_resource:
+	if override_behavior != "":
+		active_behavior = override_behavior
+	elif "behavior_type" in fish_resource:
 		active_behavior = fish_resource.behavior_type
 	else:
 		active_behavior = "Mixed"
@@ -154,7 +160,8 @@ func _setup_ui():
 	catch_bar = ColorRect.new()
 	catch_bar.name = "CatchBar"
 	catch_bar.color = Color(0.3, 0.9, 0.3, 0.7)
-	catch_bar.custom_minimum_size = Vector2(UI_WIDTH - 4, CATCH_BAR_HEIGHT)
+	catch_bar.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	catch_bar.size = Vector2(UI_WIDTH - 4, CATCH_BAR_HEIGHT)
 	catch_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(catch_bar)
 	
@@ -162,21 +169,23 @@ func _setup_ui():
 	fish_icon = ColorRect.new()
 	fish_icon.name = "Fish"
 	fish_icon.color = Color(1.0, 0.5, 0.0)
-	fish_icon.custom_minimum_size = Vector2(FISH_SIZE, FISH_SIZE)
+	fish_icon.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	fish_icon.size = Vector2(FISH_SIZE, FISH_SIZE)
 	fish_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(fish_icon)
 	
 	# Progress Bar (Side)
 	progress_bg = ColorRect.new()
 	progress_bg.color = Color(0.1, 0.1, 0.1)
-	progress_bg.custom_minimum_size = Vector2(15, UI_HEIGHT)
+	progress_bg.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	progress_bg.size = Vector2(15, UI_HEIGHT)
 	progress_bg.position = Vector2(UI_WIDTH + 10, 0)
 	container.add_child(progress_bg)
 	
 	progress_rect = ColorRect.new()
 	progress_rect.color = Color(0.2, 1.0, 0.2)
-	progress_rect.custom_minimum_size = Vector2(15, 0)
-	progress_rect.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	progress_rect.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	progress_rect.size = Vector2(15, 0)
 	progress_rect.position.y = UI_HEIGHT
 	progress_bg.add_child(progress_rect)
 
@@ -208,7 +217,6 @@ func _process(delta):
 	
 	# Smoothly resize
 	CATCH_BAR_HEIGHT = lerp(CATCH_BAR_HEIGHT, dynamic_size, delta * 2.0)
-	catch_bar.custom_minimum_size.y = CATCH_BAR_HEIGHT
 	catch_bar.size.y = CATCH_BAR_HEIGHT
 	
 	# 1. Update Fish AI
@@ -258,6 +266,9 @@ func _process(delta):
 		catch_bar.color = Color(0.8, 0.3, 0.3, 0.6)
 		
 	catch_progress = clamp(catch_progress, 0.0, 1.1) 
+	min_progress_reached = min(min_progress_reached, catch_progress)
+	if catch_progress <= 0.12:
+		near_miss_recovery = true
 	# Allow slightly over 1.0 to trigger win
 	
 	if catch_progress >= 1.0:
@@ -366,8 +377,8 @@ func _update_visuals():
 	catch_bar.position.y = bar_y
 	catch_bar.position.x = 2
 	
-	progress_rect.custom_minimum_size.y = catch_progress * UI_HEIGHT
-	progress_rect.position.y = UI_HEIGHT - progress_rect.custom_minimum_size.y
+	progress_rect.size.y = catch_progress * UI_HEIGHT
+	progress_rect.position.y = UI_HEIGHT - progress_rect.size.y
 
 func _win():
 	emit_signal("minigame_finished", true)
@@ -376,6 +387,12 @@ func _win():
 func _lose():
 	emit_signal("minigame_finished", false)
 	hide_minigame()
+
+func had_near_miss_recovery() -> bool:
+	return near_miss_recovery
+
+func get_min_progress_reached() -> float:
+	return min_progress_reached
 
 # Stub compatibility functions
 func update_tension(_a, _b): pass

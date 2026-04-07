@@ -263,6 +263,12 @@ func _connect_signals() -> void:
 	if QuotaManager:
 		if not QuotaManager.hull_updated.is_connected(_on_hull_updated):
 			QuotaManager.hull_updated.connect(_on_hull_updated)
+		if not QuotaManager.quota_updated.is_connected(_on_quota_updated):
+			QuotaManager.quota_updated.connect(_on_quota_updated)
+		if not QuotaManager.day_passed.is_connected(_on_day_passed):
+			QuotaManager.day_passed.connect(_on_day_passed)
+		if not QuotaManager.deadline_updated.is_connected(_on_deadline_updated):
+			QuotaManager.deadline_updated.connect(_on_deadline_updated)
 
 	if QuestManager:
 		if not QuestManager.contract_offer_updated.is_connected(_on_contract_offer_updated):
@@ -332,12 +338,15 @@ func _show_page(page_id: String) -> void:
 		meta_widgets.visible = page_id == "loadout" or page_id == "manage_boats"
 	if actions_title:
 		actions_title.visible = true
+		actions_title.text = "Terminal Operacyjny"
 	match page_id:
 		"start_run":
 			if extraction_time_label:
 				extraction_time_label.visible = true
+				extraction_time_label.text = "Kontrakt terenowy: 20 min | Wczesny powrot po 2:00"
 			if start_run_button:
 				start_run_button.visible = true
+				start_run_button.text = "Start kontraktu"
 		"contract":
 			if contract_description:
 				contract_description.visible = true
@@ -452,6 +461,13 @@ func _refresh_stats() -> void:
 			var total_count: int = int(RelicDatabase.all_relics.size())
 			charm_status_label.text = "Charmy: %d / %d" % [owned_count, total_count]
 
+	if QuotaManager and actions_note:
+		var quota_status: Dictionary = QuotaManager.get_deadline_status()
+		var day_no: int = int(quota_status.get("day", 1))
+		var target: int = int(quota_status.get("quota_target", 0))
+		var days_left: int = int(quota_status.get("days_left", 0))
+		actions_note.text = "Dzien %d | Cel firmy: $%d | Deadline za %d dni" % [day_no, target, days_left]
+
 func _update_lobby_widgets() -> void:
 	if challenge_ui and challenge_ui.has_method("update_ui"):
 		challenge_ui.update_ui()
@@ -481,6 +497,15 @@ func _on_money_updated(_amount: int) -> void:
 	_refresh_stats()
 
 func _on_hull_updated(_current: float, _max: float) -> void:
+	_refresh_stats()
+
+func _on_quota_updated(_current: int, _target: int) -> void:
+	_refresh_stats()
+
+func _on_day_passed(_day_count: int) -> void:
+	_refresh_stats()
+
+func _on_deadline_updated(_days_left: int, _cycle_days: int) -> void:
 	_refresh_stats()
 
 func _on_bait_changed(_bait_id: String, _qty: int) -> void:

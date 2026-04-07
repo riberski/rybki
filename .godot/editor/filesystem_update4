@@ -1,0 +1,5 @@
+res://src/player/player3d.gd
+res://src/fishing/fishing_manager3d.gd
+res://src/systems/quota_manager.gd
+res://src/ui/fishing_minigame_ui.gd
+res://src/ui/lobby_hub.gd

@@ -27,12 +27,26 @@ var cast_landing_failsafe_timer: Timer
 @export var throw_force: float = 15.0
 @export var fish_pull_boat_base: float = 2.4
 @export var fish_pull_boat_max: float = 7.5
-@export var fish_escape_multiplier: float = 1.95
+@export var fish_escape_multiplier: float = 2.65
 @export var fish_escape_burst_strength: float = 1.35
-@export var fish_escape_burst_frequency: float = 1.8
+@export var fish_escape_burst_frequency: float = 2.5
 var active_bait_stats = {"attraction": 1.0, "quality": 1.0}
 var current_fish: FishResource
 var current_fish_stamina: float = 100.0
+var catch_streak: int = 0
+var current_value_event_mult: float = 1.0
+var active_event_id: String = ""
+var active_event_name: String = ""
+var active_event_time_left: float = 0.0
+var active_event_bite_mult: float = 1.0
+var active_event_speed_mult: float = 1.0
+var event_roll_timer: float = 14.0
+
+const STREAK_BONUS_PER_CATCH: float = 0.06
+const STREAK_BONUS_MAX: float = 0.36
+const NEAR_MISS_BONUS_RATIO: float = 0.22
+const EVENT_ROLL_INTERVAL: float = 22.0
+const EVENT_TRIGGER_CHANCE: float = 0.30
 
 # Player Reference
 var player_ref: Node3D
@@ -94,6 +108,7 @@ func _exit_tree():
 		cast_landing_failsafe_timer.stop()
 
 func _process(_delta):
+	_update_dynamic_event(_delta)
 	_update_line_visual()
 	
 	if current_state == State.WAITING:
@@ -187,6 +202,8 @@ func _physics_process(delta):
 
 func start_casting(origin: Vector3, direction: Vector3, charge: float = 1.0):
 	if current_state != State.IDLE: return
+	if active_event_id == "":
+		_try_roll_new_event()
 	
 	# 1. Consume Bait
 	var active_bait = InventoryManager.use_current_bait()
@@ -246,6 +263,7 @@ func _on_bobber_landed():
 	var attraction = active_bait_stats.get("attraction", 1.0)
 	var base_time = randf_range(2.0, 5.0)
 	var time = base_time / attraction
+	time *= active_event_bite_mult
 	if InventoryManager:
 		time *= InventoryManager.bite_time_multiplier
 	bite_timer.start(time)
@@ -316,6 +334,7 @@ func try_hook():
 
 func start_minigame():
 	current_state = State.REELING
+	current_value_event_mult = 1.0
 	
 	# Pick Fish
 	var bait_id := ""
@@ -350,11 +369,15 @@ func start_minigame():
 	if minigame_ui:
 		var speed_multiplier = 1.0
 		speed_multiplier *= lerp(1.0, 1.22, clamp(risk_level / 100.0, 0.0, 1.0))
+		speed_multiplier *= active_event_speed_mult
+		current_value_event_mult = _get_event_value_multiplier()
 		if QuestManager and not QuestManager.active_quest.is_empty():
 			var active = QuestManager.active_quest
 			if active.get("type", "") == "earn_money":
 				speed_multiplier = float(active.get("fish_speed_multiplier", 1.0))
-		minigame_ui.setup_game(current_fish, speed_multiplier)
+		var behavior_override: String = _get_behavior_override_for_fish(current_fish)
+		_notify_player("Styl ryby: %s" % behavior_override, 0.9)
+		minigame_ui.setup_game(current_fish, speed_multiplier, behavior_override)
 		minigame_ui.show()
 		minigame_ui.start_minigame()
 		
@@ -372,6 +395,7 @@ func _on_minigame_finished(success: bool):
 	if success:
 		print("Caught: ", current_fish.name)
 		InventoryManager.add_expedition_fish(current_fish)
+		_apply_excitement_bonuses_after_catch()
 		if RunMetrics:
 			RunMetrics.record_catch()
 		emit_signal("fish_caught", current_fish)
@@ -390,6 +414,7 @@ func _on_minigame_finished(success: bool):
 			return # Do NOT reset yet
 			
 	else:
+		_break_streak("Utracona seria")
 		if RunMetrics:
 			RunMetrics.record_loss()
 		_notify_player("Fish escaped", 1.5)
@@ -411,6 +436,130 @@ func check_for_turn_end():
 func _check_resource_end():
 	# Called when trying to cast but failing due to no bait
 	check_for_turn_end()
+
+func _apply_excitement_bonuses_after_catch() -> void:
+	if InventoryManager == null or current_fish == null:
+		return
+
+	catch_streak += 1
+	var streak_bonus_ratio: float = clamp(float(catch_streak - 1) * STREAK_BONUS_PER_CATCH, 0.0, STREAK_BONUS_MAX)
+	if streak_bonus_ratio > 0.0:
+		var streak_bonus_value: int = int(round(float(current_fish.value) * streak_bonus_ratio))
+		if streak_bonus_value > 0:
+			InventoryManager.register_expedition_earnings(streak_bonus_value)
+			_notify_player("Seria x%d +$%d" % [catch_streak, streak_bonus_value], 1.1)
+
+	if current_value_event_mult > 1.0:
+		var event_bonus_value: int = int(round(float(current_fish.value) * (current_value_event_mult - 1.0)))
+		if event_bonus_value > 0:
+			InventoryManager.register_expedition_earnings(event_bonus_value)
+			_notify_player("Premia eventu +$%d" % event_bonus_value, 1.0)
+
+	if minigame_ui and minigame_ui.has_method("had_near_miss_recovery"):
+		var near_miss: bool = bool(minigame_ui.call("had_near_miss_recovery"))
+		if near_miss:
+			var rescue_bonus: int = int(round(float(current_fish.value) * NEAR_MISS_BONUS_RATIO))
+			if rescue_bonus > 0:
+				InventoryManager.register_expedition_earnings(rescue_bonus)
+				_notify_player("Near miss! +$%d" % rescue_bonus, 1.5)
+
+func _break_streak(reason: String = "") -> void:
+	if catch_streak >= 3:
+		var msg: String = "Seria przerwana (%d)" % catch_streak
+		if reason != "":
+			msg += ": %s" % reason
+		_notify_player(msg, 1.4)
+	catch_streak = 0
+
+func _update_dynamic_event(delta: float) -> void:
+	if TimeManager == null or not TimeManager.extraction_active:
+		active_event_id = ""
+		active_event_name = ""
+		active_event_time_left = 0.0
+		active_event_bite_mult = 1.0
+		active_event_speed_mult = 1.0
+		event_roll_timer = 14.0
+		return
+
+	if active_event_id != "":
+		active_event_time_left = max(0.0, active_event_time_left - delta)
+		if active_event_time_left <= 0.0:
+			_notify_player("Event skonczyl sie: %s" % active_event_name, 1.2)
+			active_event_id = ""
+			active_event_name = ""
+			active_event_bite_mult = 1.0
+			active_event_speed_mult = 1.0
+
+	event_roll_timer -= delta
+	if event_roll_timer <= 0.0:
+		event_roll_timer = EVENT_ROLL_INTERVAL
+		if active_event_id == "" and randf() < EVENT_TRIGGER_CHANCE:
+			_try_roll_new_event()
+
+func _try_roll_new_event() -> void:
+	if active_event_id != "":
+		return
+
+	var events: Array = [
+		{
+			"id": "hot_school",
+			"name": "Lawnica: gorace branie",
+			"duration": 36.0,
+			"bite_mult": 0.68,
+			"speed_mult": 1.08
+		},
+		{
+			"id": "predator_shadow",
+			"name": "Cien drapieznika",
+			"duration": 28.0,
+			"bite_mult": 1.10,
+			"speed_mult": 1.24
+		},
+		{
+			"id": "calm_window",
+			"name": "Spokojne okno",
+			"duration": 32.0,
+			"bite_mult": 0.92,
+			"speed_mult": 0.88
+		}
+	]
+
+	var picked: Dictionary = events[randi() % events.size()]
+	active_event_id = str(picked.get("id", ""))
+	active_event_name = str(picked.get("name", "Event"))
+	active_event_time_left = float(picked.get("duration", 20.0))
+	active_event_bite_mult = float(picked.get("bite_mult", 1.0))
+	active_event_speed_mult = float(picked.get("speed_mult", 1.0))
+	_notify_player(active_event_name, 1.8)
+
+func _get_event_value_multiplier() -> float:
+	match active_event_id:
+		"hot_school":
+			return 1.20
+		"predator_shadow":
+			return 1.45
+		"calm_window":
+			return 1.08
+		_:
+			return 1.0
+
+func _get_behavior_override_for_fish(fish: FishResource) -> String:
+	if fish == null:
+		return "Mixed"
+	if active_event_id == "predator_shadow":
+		return "Dart"
+
+	var rarity: float = float(fish.rarity)
+	var difficulty: float = float(fish.difficulty)
+	if rarity >= 0.85 or difficulty >= 4.6:
+		return "Dart"
+	if difficulty <= 1.8:
+		return "Smooth"
+	if rarity < 0.35 and randf() < 0.45:
+		return "Sinker"
+	if rarity >= 0.55 and randf() < 0.35:
+		return "Floater"
+	return "Mixed"
 
 func reset_fishing():
 	bite_timer.stop()
