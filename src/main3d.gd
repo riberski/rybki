@@ -9,6 +9,8 @@ extends Node3D
 @onready var sun_light = $DirectionalLight3D
 @onready var sun_visual = $SunVisual
 @onready var existing_world_env: WorldEnvironment = get_node_or_null("WorldEnvironment")
+@onready var reflection_probe: ReflectionProbe = get_node_or_null("ReflectionProbe")
+@onready var water_mesh: MeshInstance3D = get_node_or_null("Water")
 var world_env: WorldEnvironment
 var rain_instance: GPUParticles3D
 var player_instance: Node3D
@@ -20,6 +22,12 @@ var extraction_zone_instances: Array[Area3D] = []
 @export var night_energy: float = 0.05
 @export_file("*.hdr", "*.exr", "*.png", "*.jpg", "*.jpeg") var hdri_sky_path: String = "res://src/assets/hdri/sky.exr"
 @export var hdri_sky_energy: float = 1.0
+@export var world_brightness: float = 1.15
+@export var world_saturation: float = 1.08
+@export var world_contrast: float = 1.06
+@export var day_fog_density: float = 0.003
+@export var night_fog_density: float = 0.009
+@export var reflection_boost: float = 1.35
 
 func _ready():
 	_cleanup_legacy_world_chunks()
@@ -65,6 +73,10 @@ func setup_environment():
 		if not _apply_hdri_sky(world_env.environment):
 			# Keep a usable sky when no HDRI file is present yet.
 			_configure_default_environment(world_env.environment)
+		_apply_environment_polish(world_env.environment)
+
+	_apply_water_polish()
+	_apply_reflection_polish()
 	
 	# Create Rain Particles (attached to camera or player later)
 	rain_instance = rain_scene.instantiate()
@@ -80,6 +92,43 @@ func _configure_default_environment(env: Environment) -> void:
 		env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+
+func _apply_environment_polish(env: Environment) -> void:
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = world_brightness
+	env.glow_enabled = true
+	env.glow_intensity = 0.52
+	env.glow_bloom = 0.14
+	env.ssao_enabled = true
+	env.ssao_radius = 1.9
+	env.ssao_intensity = 1.4
+	env.sdfgi_enabled = false
+	env.adjustment_enabled = true
+	env.adjustment_saturation = world_saturation
+	env.adjustment_contrast = world_contrast
+	env.fog_enabled = true
+	env.fog_aerial_perspective = 0.50
+	env.fog_sky_affect = 0.3
+	env.fog_light_color = Color(0.62, 0.72, 0.80)
+	env.fog_light_energy = 0.8
+
+func _apply_water_polish() -> void:
+	if water_mesh == null:
+		return
+	var mat := water_mesh.get_surface_override_material(0)
+	if mat is ShaderMaterial:
+		var shader_mat := mat as ShaderMaterial
+		shader_mat.set_shader_parameter("color", Color(0.34, 0.63, 0.86, 1.0))
+		shader_mat.set_shader_parameter("reflect_strength", 1.0)
+		shader_mat.set_shader_parameter("fresnel_power", 6.2)
+		shader_mat.set_shader_parameter("roughness", 0.08)
+		shader_mat.set_shader_parameter("gloss_roughness", 0.02)
+
+func _apply_reflection_polish() -> void:
+	if reflection_probe == null:
+		return
+	reflection_probe.intensity = reflection_boost
+	reflection_probe.interior = false
 
 func _apply_hdri_sky(env: Environment) -> bool:
 	if hdri_sky_path.strip_edges().is_empty():
@@ -309,6 +358,12 @@ func _update_sun_and_lighting() -> void:
 
 	if world_env and world_env.environment:
 		world_env.environment.ambient_light_energy = lerp(0.22, 0.72, daylight_factor)
+		world_env.environment.fog_density = lerp(night_fog_density, day_fog_density, daylight_factor)
+		world_env.environment.fog_light_color = Color(
+			lerp(0.22, 0.62, daylight_factor),
+			lerp(0.27, 0.72, daylight_factor),
+			lerp(0.34, 0.80, daylight_factor)
+		)
 
 	if sun_visual:
 		var center := Vector3.ZERO

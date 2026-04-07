@@ -158,6 +158,7 @@ var distance_modifier_multiplier: float = 1.0 # Chase distance modifier strength
 # Fish Behavior (World)
 var fish_run_force_multiplier: float = 1.0 # Lower = fish flee slower
 var fish_run_wiggle_multiplier: float = 1.0 # Lower = less erratic flee
+var fish_clone_chance: float = 0.0 # Chance to duplicate caught fish rewards
 
 # Expedition Modifiers
 var expedition_value_multiplier: float = 1.0 # Fish value this expedition
@@ -291,6 +292,7 @@ func reset_run_modifiers() -> void:
 	# Reset Fish Behavior
 	fish_run_force_multiplier = 1.0
 	fish_run_wiggle_multiplier = 1.0
+	fish_clone_chance = 0.0
 
 	# Reset Expedition Modifiers
 	expedition_value_multiplier = 1.0
@@ -714,6 +716,11 @@ func add_expedition_fish(fish: FishResource):
 	expedition_fish.append(fish)
 	var value = int(fish.value * global_value_multiplier * expedition_value_multiplier)
 	register_expedition_earnings(value)
+
+	# Item effects like Fish Clone can duplicate expedition rewards.
+	if fish_clone_chance > 0.0 and randf() < fish_clone_chance:
+		expedition_fish.append(fish)
+		register_expedition_earnings(value)
 	# Emit to update contract progress and any listeners during a run
 	emit_signal("inventory_updated", fish)
 	save_game()
