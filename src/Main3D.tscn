@@ -32,6 +32,11 @@
 [ext_resource type="ArrayMesh" uid="uid://c50f7sbewun2n" path="res://src/assets/drzewa/drzewo7.obj" id="29_rryuu"]
 [ext_resource type="ArrayMesh" uid="uid://ba55bb4vxje1b" path="res://src/assets/kamyki/kamyk5.obj" id="31_23pyf"]
 [ext_resource type="ArrayMesh" uid="uid://crvg3pkw6rv8l" path="res://src/assets/kamyki/kamyk4.obj" id="32_4o0sn"]
+[ext_resource type="ArrayMesh" uid="uid://bvupwylcwsye8" path="res://src/assets/kamyki/sciezka1.obj" id="33_wukhs"]
+[ext_resource type="ArrayMesh" uid="uid://drcgrot40vm3t" path="res://src/assets/kamyki/kamyk7.obj" id="34_fmrbj"]
+[ext_resource type="ArrayMesh" uid="uid://clee05jkbcsav" path="res://src/assets/drzewa/Unlilia wodnatitled.obj" id="35_rryuu"]
+[ext_resource type="ArrayMesh" uid="uid://dtmsr1e8wr4v" path="res://src/assets/budynki/tablicaz1.obj" id="36_23pyf"]
+[ext_resource type="ArrayMesh" uid="uid://cp5gunrxgkvab" path="res://src/assets/budynki/tablicaz2.obj" id="37_4o0sn"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.17, 0.38, 0.6, 1)
@@ -207,11 +212,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144.45802, 0, 96.50022)
 mesh = SubResource("ArrayMesh_23pyf")
 
 [node name="Sciezka" type="MeshInstance3D" parent="." unique_id=667947511]
-transform = Transform3D(0.018402334, 0, -0.63422364, 0, 0.63449067, 0, 0.63422364, 0, 0.018402334, 151.52055, 9.630952, 63.023994)
+transform = Transform3D(0.018402334, 0, -0.63422364, 0, 0.63449067, 0, 0.63422364, 0, 0.018402334, 151.52055, 9.910386, 63.023994)
 mesh = ExtResource("22_2sxyg")
 
-[node name="mapa_nowa" parent="." unique_id=1041713398 instance=ExtResource("18_auogb")]
-transform = Transform3D(39.701317, 0, 0, 0, 39.701317, 0, 0, 0, 39.701317, 30.892578, 13.309792, 10.677937)
+[node name="mapa_nowa" parent="." unique_id=149231880 instance=ExtResource("18_auogb")]
+transform = Transform3D(39.701317, 0, 0, 0, 39.701317, 0, 0, 0, 39.701317, 30.892578, 13.572952, 10.677937)
 
 [node name="Sklepik1" type="MeshInstance3D" parent="." unique_id=1838118162]
 transform = Transform3D(0.57322943, 0, -0.17482726, 0, 0.5992967, 0, 0.17482726, 0, 0.57322943, 147.86755, 9.563038, 53.18225)
@@ -282,7 +287,7 @@ transform = Transform3D(-0.007365204, 0, 0.9999729, 0, 1, 0, -0.9999729, 0, -0.0
 mesh = ExtResource("23_ko7br")
 
 [node name="Choinka7" type="MeshInstance3D" parent="." unique_id=1821578081]
-transform = Transform3D(-0.748534, 0, 1.2533387, 0, 1.4598496, 0, -1.2533387, 0, -0.748534, 169.37009, 10.577713, 51.724876)
+transform = Transform3D(-0.748534, 0, 1.2533387, 0, 1.4598496, 0, -1.2533387, 0, -0.748534, 169.37009, 11.179747, 51.724876)
 mesh = ExtResource("23_ko7br")
 
 [node name="Choinka8" type="MeshInstance3D" parent="." unique_id=222973869]
@@ -290,7 +295,7 @@ transform = Transform3D(-0.2513478, 0, -1.120515, 0, 1.1483594, 0, 1.120515, 0, 
 mesh = ExtResource("23_ko7br")
 
 [node name="Choinka9" type="MeshInstance3D" parent="." unique_id=614309624]
-transform = Transform3D(1.0885473, 0, 0, 0, 1.0885473, 0, 0, 0, 1.0885473, 154.79869, 10.491428, 70.266075)
+transform = Transform3D(1.0885473, 0, 0, 0, 1.0885473, 0, 0, 0, 1.0885473, 154.79869, 10.841595, 70.266075)
 mesh = ExtResource("23_ko7br")
 
 [node name="Drzewo7" type="MeshInstance3D" parent="." unique_id=989284031]
@@ -310,11 +315,11 @@ transform = Transform3D(1.4650347, 0, 2.2710977, 0, 2.4328294, 0, -2.7190456, 0,
 mesh = ExtResource("22_l6m0y")
 
 [node name="Choinka10" type="MeshInstance3D" parent="." unique_id=1854781679]
-transform = Transform3D(0.55642694, 0, 0.5436203, 0, 0.77790356, 0, -0.5436203, 0, 0.55642694, 157.51309, 10.344532, 74.91837)
+transform = Transform3D(0.55642694, 0, 0.5436203, 0, 0.77790356, 0, -0.5436203, 0, 0.55642694, 157.51309, 10.596315, 74.91837)
 mesh = ExtResource("23_ko7br")
 
 [node name="Choinka11" type="MeshInstance3D" parent="." unique_id=1675359362]
-transform = Transform3D(-0.031790104, 0, -1.3263582, 0, 1.3267391, 0, 1.3263582, 0, -0.031790104, 161.30286, 10.526876, 71.15625)
+transform = Transform3D(-0.031790104, 0, -1.3263582, 0, 1.3267391, 0, 1.3263582, 0, -0.031790104, 161.30286, 11.062751, 71.15625)
 mesh = ExtResource("23_ko7br")
 
 [node name="Drzewo8" type="MeshInstance3D" parent="." unique_id=544660197]
@@ -338,7 +343,7 @@ transform = Transform3D(7.6651545, 0, 0, 0, 6.7948227, 0, 0, 0, 9.639572, 146.66
 mesh = ExtResource("20_5dwit")
 
 [node name="Choinka12" type="MeshInstance3D" parent="." unique_id=1474721106]
-transform = Transform3D(-1.048636, 0, -0.6007541, 0, 1.2085292, 0, 0.6007541, 0, -1.048636, 169.73778, 10.641122, 62.49923)
+transform = Transform3D(-1.048636, 0, -0.6007541, 0, 1.2085292, 0, 0.6007541, 0, -1.048636, 169.73778, 10.892914, 62.49923)
 mesh = ExtResource("23_ko7br")
 
 [node name="Choinka13" type="MeshInstance3D" parent="." unique_id=576721880]
@@ -346,11 +351,11 @@ transform = Transform3D(-0.114104874, 0, 0.9934687, 0, 1, 0, -0.9934687, 0, -0.1
 mesh = ExtResource("23_ko7br")
 
 [node name="Choinka14" type="MeshInstance3D" parent="." unique_id=729528421]
-transform = Transform3D(0.5312244, 0, 0.7241276, 0, 0.89808697, 0, -0.7241276, 0, 0.5312244, 165.5914, 10.63512, 58.20753)
+transform = Transform3D(0.5312244, 0, 0.7241276, 0, 0.89808697, 0, -0.7241276, 0, 0.5312244, 165.5914, 10.7376995, 58.20753)
 mesh = ExtResource("23_ko7br")
 
 [node name="Choinka15" type="MeshInstance3D" parent="." unique_id=1455002548]
-transform = Transform3D(0.35368693, 0, 0.95205265, 0, 1.0156273, 0, -0.95205265, 0, 0.35368693, 168.60089, 10.546491, 70.87791)
+transform = Transform3D(0.35368693, 0, 0.95205265, 0, 1.0156273, 0, -0.95205265, 0, 0.35368693, 168.60089, 10.580671, 70.87791)
 mesh = ExtResource("23_ko7br")
 
 [node name="Choinka16" type="MeshInstance3D" parent="." unique_id=2068647732]
@@ -372,3 +377,119 @@ mesh = ExtResource("24_l6m0y")
 [node name="Kamyk12" type="MeshInstance3D" parent="." unique_id=1642568336]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 171.41063, 9.75792, 66.01809)
 mesh = ExtResource("32_4o0sn")
+
+[node name="Most2" type="MeshInstance3D" parent="." unique_id=2141894547]
+transform = Transform3D(-0.9997019, 0, -0.02441465, 0, 1, 0, 0.02441465, 0, -0.9997019, 9.025009, 11.722248, -220.27066)
+mesh = ExtResource("24_wukhs")
+
+[node name="Drzewo3" type="MeshInstance3D" parent="." unique_id=1908880510]
+transform = Transform3D(0.97317964, 0, -0.65057087, 0, 1.1540312, 0, 0.68746984, 0, 0.9209456, 13.537811, 11.898418, -225.8376)
+mesh = ExtResource("22_l6m0y")
+
+[node name="Choinka17" type="MeshInstance3D" parent="." unique_id=4439542]
+transform = Transform3D(0.9683682, 0, 0, 0, 0.9683682, 0, 0, 0, 0.9683682, 1.714365, 13.021847, -229.69876)
+mesh = ExtResource("23_ko7br")
+
+[node name="Choinka18" type="MeshInstance3D" parent="." unique_id=1045813803]
+transform = Transform3D(1.0862391, 0, 0, 0, 1.0862391, 0, 0, 0, 1.0862391, -6.0700836, 13.126373, -226.13234)
+mesh = ExtResource("23_ko7br")
+
+[node name="Choinka19" type="MeshInstance3D" parent="." unique_id=1924177106]
+transform = Transform3D(1.4028002, 0, 0, 0, 1.4028002, 0, 0, 0, 1.4028002, -6.265774, 13.045055, -237.40579)
+mesh = ExtResource("23_ko7br")
+
+[node name="Choinka20" type="MeshInstance3D" parent="." unique_id=1179295857]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.557594, 12.896843, -228.58922)
+mesh = ExtResource("23_ko7br")
+
+[node name="Choinka21" type="MeshInstance3D" parent="." unique_id=1540359346]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5391693, 13.010532, -245.32437)
+mesh = ExtResource("23_ko7br")
+
+[node name="Drzewo10" type="MeshInstance3D" parent="." unique_id=146248841]
+transform = Transform3D(1.2161952, 0, -0.21240315, 0, 1.2039365, 0, 0.18769014, 0, 1.3763307, -13.50264, 12.378132, -230.79808)
+mesh = ExtResource("27_fmrbj")
+
+[node name="Drzewo11" type="MeshInstance3D" parent="." unique_id=1204076555]
+transform = Transform3D(1.4490827, 0, 0.6457209, 0, 1.5472968, 0, -0.5424818, 0, 1.7248561, 10.824162, 12.078596, -243.75287)
+mesh = ExtResource("29_rryuu")
+
+[node name="Drzewo4" type="MeshInstance3D" parent="." unique_id=1063173926]
+transform = Transform3D(1.4101108, 0, 1.3052741, 0, 1.9214976, 0, -1.3052741, 0, 1.4101108, 17.890303, 11.951573, -224.69156)
+mesh = ExtResource("22_l6m0y")
+
+[node name="Sciezka1" type="MeshInstance3D" parent="." unique_id=47708810]
+transform = Transform3D(0.15636262, 0, 0.5090866, 0, 0.5325584, 0, -0.5090866, 0, 0.15636262, 10.464149, 12.001774, -230.06244)
+mesh = ExtResource("33_wukhs")
+
+[node name="Sciezka2" type="MeshInstance3D" parent="." unique_id=447671904]
+transform = Transform3D(0.391454, 0, 0.41976833, 0, 0.5739701, 0, -0.41976833, 0, 0.391454, 16.107578, 12.212372, -239.22774)
+mesh = ExtResource("22_2sxyg")
+
+[node name="Sciezka3" type="MeshInstance3D" parent="." unique_id=753359738]
+transform = Transform3D(0.52187693, 0, -0.37567002, 0, 0.6430268, 0, 0.37567002, 0, 0.52187693, 5.431964, 12.060799, -236.75175)
+mesh = ExtResource("33_wukhs")
+
+[node name="Kamyk13" type="MeshInstance3D" parent="." unique_id=1339364030]
+transform = Transform3D(2.802571, 0, 0.3246155, 0, 2.8213081, 0, -0.3246155, 0, 2.802571, 159.2526, 10.181624, 66.12868)
+mesh = ExtResource("23_hs6yq")
+
+[node name="Kamyk14" type="MeshInstance3D" parent="." unique_id=1418285164]
+transform = Transform3D(5.9370384, 0, 0, 0, -0.5119757, -5.9149218, 0, 5.9149218, -0.5119757, 113.15856, 9.395445, 53.144592)
+mesh = ExtResource("34_fmrbj")
+
+[node name="Kamyk15" type="MeshInstance3D" parent="." unique_id=1940693306]
+transform = Transform3D(3.4591951, 0, -2.5035796, 0.059638996, 4.2689104, 0.08240318, 2.5028691, -0.10172067, 3.4582136, 124.987206, 7.7760963, 44.434372)
+mesh = ExtResource("24_l6m0y")
+
+[node name="Kamyk3" type="MeshInstance3D" parent="." unique_id=1117949019]
+transform = Transform3D(1.4740908, 0, 3.8903074, 0, 3.291102, 0, -3.3971472, 0, 1.688083, 135.54382, 8.825101, 63.0561)
+mesh = ExtResource("21_hs6yq")
+
+[node name="Kamyk16" type="MeshInstance3D" parent="." unique_id=463753470]
+transform = Transform3D(3.0753567, 0, 0, 0, 3.0753567, 0, 0, 0, 3.0753567, 130.63751, 8.213385, 73.7922)
+mesh = ExtResource("24_l6m0y")
+
+[node name="Kamyk17" type="MeshInstance3D" parent="." unique_id=121100983]
+transform = Transform3D(0.06311235, 0, 1.9095398, 0, 1.9105825, 0, -1.9095398, 0, 0.06311235, -12.163179, 11.001583, -277.0785)
+mesh = ExtResource("31_23pyf")
+
+[node name="Kamyk18" type="MeshInstance3D" parent="." unique_id=1653965987]
+transform = Transform3D(7.2904015, 0, -1.3954664, 0, 7.422754, 0, 1.3954664, 0, 7.2904015, -57.13032, 13.109947, -292.40488)
+mesh = ExtResource("23_hs6yq")
+
+[node name="Kamyk19" type="MeshInstance3D" parent="." unique_id=765459046]
+transform = Transform3D(1.8621087, 0, 0, 0, 1.8621087, 0, 0, 0, 1.8621087, 4.7014003, 12.451059, -232.12936)
+mesh = ExtResource("34_fmrbj")
+
+[node name="Kamyk20" type="MeshInstance3D" parent="." unique_id=444114712]
+transform = Transform3D(0.9741064, 0, 0.2260903, 0, 1, 0, -0.2260903, 0, 0.9741064, 9.385233, 12.0823555, -232.44122)
+mesh = ExtResource("18_71lqf")
+
+[node name="Kamyk21" type="MeshInstance3D" parent="." unique_id=1684357417]
+transform = Transform3D(2.2909777, 0, 0.83031744, 0, 2.4368024, 0, -0.83031744, 0, 2.2909777, -26.203949, 11.783951, -278.03168)
+mesh = ExtResource("18_71lqf")
+
+[node name="Kamyk22" type="MeshInstance3D" parent="." unique_id=95272410]
+transform = Transform3D(0.60251176, 0, -0.79811, 0, 1, 0, 0.79811, 0, 0.60251176, 12.050568, 12.269928, -235.43156)
+mesh = ExtResource("32_4o0sn")
+
+[node name="UnliliaWodnatitled" type="MeshInstance3D" parent="." unique_id=74033148]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.428705, 9.112434, -220.43745)
+mesh = ExtResource("35_rryuu")
+
+[node name="UnliliaWodnatitled2" type="MeshInstance3D" parent="." unique_id=4029033]
+transform = Transform3D(0.06526378, 0, 0.99786806, 0, 1, 0, -0.99786806, 0, 0.06526378, 3.7648773, 9.201915, -219.93204)
+mesh = ExtResource("35_rryuu")
+
+[node name="UnliliaWodnatitled3" type="MeshInstance3D" parent="." unique_id=1338286023]
+transform = Transform3D(0.37604496, 0, -0.5502086, 0, 0.6664378, 0, 0.5502086, 0, 0.37604496, 4.9157352, 9.142436, -219.48767)
+mesh = ExtResource("35_rryuu")
+
+[node name="Tablicaz1" type="MeshInstance3D" parent="." unique_id=1301913813]
+transform = Transform3D(-1.5748295, 0, 0.15055695, 0, 1.5820098, 0, -0.15055695, 0, -1.5748295, 151.01233, 11.004482, 70.753746)
+mesh = ExtResource("36_23pyf")
+
+[node name="Tablicaz2" type="MeshInstance3D" parent="." unique_id=1463113060]
+transform = Transform3D(-0.0613879, 0, -1.1393883, 0, 1.1410408, 0, 1.1393883, 0, -0.0613879, 10.507973, 12.025364, -235.56744)
+mesh = ExtResource("37_4o0sn")
