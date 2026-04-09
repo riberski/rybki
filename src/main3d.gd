@@ -8,16 +8,32 @@ extends Node3D
 
 @onready var sun_light = $DirectionalLight3D
 @onready var sun_visual = $SunVisual
+@onready var existing_world_env: WorldEnvironment = get_node_or_null("WorldEnvironment")
+@onready var reflection_probe: ReflectionProbe = get_node_or_null("ReflectionProbe")
+@onready var water_mesh: MeshInstance3D = get_node_or_null("Water")
 var world_env: WorldEnvironment
 var rain_instance: GPUParticles3D
 var player_instance: Node3D
-var extraction_zone_instance: Area3D
+var extraction_zone_instances: Array[Area3D] = []
+
+@export var sun_orbit_radius: float = 220.0
+@export var sun_azimuth_degrees: float = 35.0
+@export var daylight_energy: float = 1.15
+@export var night_energy: float = 0.05
+@export_file("*.hdr", "*.exr", "*.png", "*.jpg", "*.jpeg") var hdri_sky_path: String = "res://src/assets/hdri/sky.exr"
+@export var hdri_sky_energy: float = 1.0
+@export var world_brightness: float = 1.15
+@export var world_saturation: float = 1.08
+@export var world_contrast: float = 1.06
+@export var day_fog_density: float = 0.003
+@export var night_fog_density: float = 0.009
+@export var reflection_boost: float = 1.35
 
 func _ready():
 	_cleanup_legacy_world_chunks()
 	setup_environment()
 	spawn_player()
-	spawn_extraction_zone()
+	spawn_extraction_zones()
 	# spawn_shop() # Shop is now in Main3D.tscn
 	spawn_obstacles()
 
@@ -41,17 +57,26 @@ func _setup_weather_manager():
 	WeatherManager.set_environment_references(world_env, rain_instance)
 
 func setup_environment():
-	# Create WorldEnvironment dynamically if not present
-	world_env = WorldEnvironment.new()
-	var env = Environment.new()
-	env.background_mode = Environment.BG_SKY
-	var sky = Sky.new()
-	sky.sky_material = ProceduralSkyMaterial.new()
-	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	world_env.environment = env
-	add_child(world_env)
+	# Reuse scene WorldEnvironment when available to keep map authoring intact.
+	if existing_world_env:
+		world_env = existing_world_env
+		if world_env.environment == null:
+			world_env.environment = Environment.new()
+	else:
+		world_env = WorldEnvironment.new()
+		var env := Environment.new()
+		_configure_default_environment(env)
+		world_env.environment = env
+		add_child(world_env)
+
+	if world_env and world_env.environment:
+		if not _apply_hdri_sky(world_env.environment):
+			# Keep a usable sky when no HDRI file is present yet.
+			_configure_default_environment(world_env.environment)
+		_apply_environment_polish(world_env.environment)
+
+	_apply_water_polish()
+	_apply_reflection_polish()
 	
 	# Create Rain Particles (attached to camera or player later)
 	rain_instance = rain_scene.instantiate()
@@ -59,33 +84,84 @@ func setup_environment():
 	rain_instance.position = Vector3(0, 10, 0) # Start high
 	rain_instance.emitting = false
 
+func _configure_default_environment(env: Environment) -> void:
+	env.background_mode = Environment.BG_SKY
+	if env.sky == null:
+		var sky := Sky.new()
+		sky.sky_material = ProceduralSkyMaterial.new()
+		env.sky = sky
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+
+func _apply_environment_polish(env: Environment) -> void:
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = world_brightness
+	env.glow_enabled = true
+	env.glow_intensity = 0.52
+	env.glow_bloom = 0.14
+	env.ssao_enabled = true
+	env.ssao_radius = 1.9
+	env.ssao_intensity = 1.4
+	env.sdfgi_enabled = false
+	env.adjustment_enabled = true
+	env.adjustment_saturation = world_saturation
+	env.adjustment_contrast = world_contrast
+	env.fog_enabled = true
+	env.fog_aerial_perspective = 0.50
+	env.fog_sky_affect = 0.3
+	env.fog_light_color = Color(0.62, 0.72, 0.80)
+	env.fog_light_energy = 0.8
+
+func _apply_water_polish() -> void:
+	if water_mesh == null:
+		return
+	var mat := water_mesh.get_surface_override_material(0)
+	if mat is ShaderMaterial:
+		var shader_mat := mat as ShaderMaterial
+		shader_mat.set_shader_parameter("color", Color(0.34, 0.63, 0.86, 1.0))
+		shader_mat.set_shader_parameter("reflect_strength", 1.0)
+		shader_mat.set_shader_parameter("fresnel_power", 6.2)
+		shader_mat.set_shader_parameter("roughness", 0.08)
+		shader_mat.set_shader_parameter("gloss_roughness", 0.02)
+
+func _apply_reflection_polish() -> void:
+	if reflection_probe == null:
+		return
+	reflection_probe.intensity = reflection_boost
+	reflection_probe.interior = false
+
+func _apply_hdri_sky(env: Environment) -> bool:
+	if hdri_sky_path.strip_edges().is_empty():
+		return false
+	if not ResourceLoader.exists(hdri_sky_path):
+		return false
+
+	var loaded := load(hdri_sky_path)
+	if loaded == null or not (loaded is Texture2D):
+		return false
+
+	var panorama := PanoramaSkyMaterial.new()
+	panorama.panorama = loaded as Texture2D
+	panorama.energy_multiplier = hdri_sky_energy
+
+	var sky := Sky.new()
+	sky.sky_material = panorama
+
+	env.background_mode = Environment.BG_SKY
+	env.sky = sky
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	return true
+
 func _process(delta):
-	# Update sun
-	if sun_light:
-		var time = TimeManager.current_time
-		# Rotate sun around X. 
-		# We need to map 0..24 to a full rotation.
-		# Noon (12) is -90.
-		# Sunrise (6) is 0 (or -180 depending on orientation). 
-		# Let's say Sunrise is at X=0 (Horizon), Noon is X=-90.
-		var rot_x = -(time - 6.0) * 15.0
-		sun_light.rotation_degrees.x = rot_x
-		
-		# Move visible sun sphere to match light direction.
-		if sun_visual:
-			var dir = -sun_light.global_transform.basis.z
-			var center = Vector3.ZERO
-			if player_instance:
-				center = player_instance.global_position
-			sun_visual.global_position = center + (dir * 200.0)
-		
-		# Optional: Adjust color/energy based on time?
-		# Currently simple rotation.
+	_update_sun_and_lighting()
 		
 	# Update Rain Position
 	if rain_instance and player_instance:
 		var pos = player_instance.global_position
 		rain_instance.global_position = Vector3(pos.x, pos.y + 10.0, pos.z)
+
+	_update_extraction_point_activity()
 
 
 func spawn_player():
@@ -134,57 +210,164 @@ func spawn_obstacles():
 		else:
 			rock.queue_free()
 
-func spawn_extraction_zone() -> void:
+func spawn_extraction_zones() -> void:
 	if extraction_zone_script == null:
 		return
 
-	extraction_zone_instance = Area3D.new()
-	extraction_zone_instance.name = "ExtractionZone"
-	extraction_zone_instance.set_script(extraction_zone_script)
-	add_child(extraction_zone_instance)
+	var points = [
+		{"name": "ExtractionStatic", "type": 0, "window": Vector2i(0, 1200), "capacity": 99},
+		{"name": "ExtractionDynamic", "type": 1, "window": Vector2i(45, 1200), "capacity": 1},
+		{"name": "ExtractionHidden", "type": 2, "window": Vector2i(0, 1200), "capacity": 1},
+		{"name": "ExtractionEmergency", "type": 3, "window": Vector2i(0, 1200), "capacity": 1}
+	]
 
-	if extraction_zone_instance.has_method("initialize_visuals"):
-		extraction_zone_instance.initialize_visuals()
+	for point in points:
+		var zone := Area3D.new()
+		zone.name = str(point["name"])
+		zone.set_script(extraction_zone_script)
+		add_child(zone)
+		if zone.has_method("initialize_visuals"):
+			zone.initialize_visuals()
+		if zone.has_method("configure"):
+			zone.configure(int(point["type"]), point["window"], int(point["capacity"]))
+		extraction_zone_instances.append(zone)
 
-	_randomize_extraction_zone_position()
+	_randomize_extraction_zone_positions()
 
 func _on_extraction_started(_total_seconds: int) -> void:
-	_randomize_extraction_zone_position()
+	_randomize_extraction_zone_positions()
+	for zone in extraction_zone_instances:
+		if not is_instance_valid(zone):
+			continue
+		var point_type := int(zone.get("point_type"))
+		if zone.has_method("set_active"):
+			# Hidden point stays dark until discovered.
+			zone.set_active(point_type != 2)
 	if player_instance and player_instance.has_method("show_notification"):
 		player_instance.show_notification("Nowy punkt ekstrakcji zostal oznaczony", 2.2)
 
 func _on_extraction_finished(reason: String) -> void:
-	if reason != "zone_extract" and reason != "timeout":
-		return
 	if InventoryManager:
 		InventoryManager.save_game()
 	get_tree().call_deferred("change_scene_to_file", "res://src/ui/lobby_world.tscn")
 
-func _randomize_extraction_zone_position() -> void:
-	if extraction_zone_instance == null:
+func _randomize_extraction_zone_positions() -> void:
+	if extraction_zone_instances.is_empty():
 		return
 
 	var min_coord := -20.0
 	var max_coord := 20.0
 	var dock_pos := Vector3(0.0, 0.0, 5.0)
-	var chosen := Vector3(12.0, -0.45, -12.0)
-	var found := false
+	var used_positions: Array[Vector3] = []
 
-	for _attempt in range(40):
-		var candidate := Vector3(
-			randf_range(min_coord, max_coord),
-			-0.45,
-			randf_range(min_coord, max_coord)
+	for zone in extraction_zone_instances:
+		if not is_instance_valid(zone):
+			continue
+		var chosen := Vector3(12.0, -0.45, -12.0)
+		var found := false
+		for _attempt in range(50):
+			var candidate := Vector3(
+				randf_range(min_coord, max_coord),
+				-0.45,
+				randf_range(min_coord, max_coord)
+			)
+			if candidate.distance_to(dock_pos) < 9.0:
+				continue
+			if player_instance and candidate.distance_to(player_instance.global_position) < 8.0:
+				continue
+			var too_close := false
+			for used in used_positions:
+				if candidate.distance_to(used) < 7.0:
+					too_close = true
+					break
+			if too_close:
+				continue
+			chosen = candidate
+			found = true
+			break
+
+		if not found:
+			chosen = Vector3(randf_range(10.0, 16.0), -0.45, randf_range(-16.0, -10.0))
+		zone.global_position = chosen
+		used_positions.append(chosen)
+
+func _update_extraction_point_activity() -> void:
+	if TimeManager == null or extraction_zone_instances.is_empty():
+		return
+
+	var active := TimeManager.extraction_active
+	var elapsed := 0
+	if active:
+		elapsed = TimeManager.extraction_duration_seconds - int(ceil(TimeManager.extraction_remaining_seconds))
+
+	for zone in extraction_zone_instances:
+		if not is_instance_valid(zone):
+			continue
+		if not zone.has_method("set_active"):
+			continue
+
+		var point_type := int(zone.get("point_type"))
+		var should_be_active := active
+
+		if point_type == 1:
+			# Dynamic extraction appears after early roam period.
+			should_be_active = active and elapsed >= 45
+		elif point_type == 2:
+			# Hidden extraction controls itself after discovery.
+			continue
+		elif point_type == 3:
+			# Emergency extraction only in final minute.
+			should_be_active = active and TimeManager.extraction_remaining_seconds <= 60.0
+
+		zone.set_active(should_be_active)
+
+func _update_sun_and_lighting() -> void:
+	if sun_light == null:
+		return
+
+	var time_of_day: float = 12.0
+	if TimeManager:
+		time_of_day = TimeManager.current_time
+
+	# 0..1 normalized day progress
+	var day_t: float = fposmod(time_of_day, 24.0) / 24.0
+	var sun_angle: float = day_t * TAU
+
+	# Elevation curve: max at noon, below horizon at night
+	var elevation_raw: float = sin(sun_angle - PI * 0.5)
+	var elevation_norm: float = clamp((elevation_raw + 1.0) * 0.5, 0.0, 1.0)
+	var daylight_factor: float = clamp((elevation_raw + 0.08) / 1.08, 0.0, 1.0)
+
+	# Azimuth drift gives side-to-side sun travel across sky.
+	var azimuth_rad: float = deg_to_rad(sun_azimuth_degrees)
+	var horizontal: float = cos(sun_angle - PI * 0.5)
+	var sun_dir := Vector3(
+		horizontal * cos(azimuth_rad),
+		elevation_raw,
+		horizontal * sin(azimuth_rad)
+	).normalized()
+
+	# Directional light points along its -Z axis.
+	sun_light.look_at(sun_light.global_position + sun_dir, Vector3.UP)
+	sun_light.light_energy = lerp(night_energy, daylight_energy, daylight_factor)
+	sun_light.light_color = Color(
+		lerp(0.50, 1.0, elevation_norm),
+		lerp(0.58, 0.96, elevation_norm),
+		lerp(0.75, 0.86, elevation_norm)
+	)
+
+	if world_env and world_env.environment:
+		world_env.environment.ambient_light_energy = lerp(0.22, 0.72, daylight_factor)
+		world_env.environment.fog_density = lerp(night_fog_density, day_fog_density, daylight_factor)
+		world_env.environment.fog_light_color = Color(
+			lerp(0.22, 0.62, daylight_factor),
+			lerp(0.27, 0.72, daylight_factor),
+			lerp(0.34, 0.80, daylight_factor)
 		)
-		if candidate.distance_to(dock_pos) < 10.0:
-			continue
-		if player_instance and candidate.distance_to(player_instance.global_position) < 8.0:
-			continue
-		chosen = candidate
-		found = true
-		break
 
-	if not found:
-		chosen = Vector3(14.0, -0.45, -14.0)
-
-	extraction_zone_instance.global_position = chosen
+	if sun_visual:
+		var center := Vector3.ZERO
+		if player_instance:
+			center = player_instance.global_position
+		sun_visual.global_position = center + (sun_dir * sun_orbit_radius)
+		sun_visual.visible = elevation_raw > -0.18

@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://d2k1k2k2j4k5"]
+[gd_scene format=3 uid="uid://d2k1k2k2j4k5"]
 
 [ext_resource type="Script" uid="uid://dfnvu7vrhnh33" path="res://src/player/player3d.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://inventoryui" path="res://src/ui/inventory_ui.tscn" id="2_ui"]
@@ -27,59 +27,59 @@ rings = 1
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_boat"]
 albedo_color = Color(0.4, 0.2, 0.1, 1)
 
-[node name="Player3D" type="CharacterBody3D"]
+[node name="Player3D" type="CharacterBody3D" unique_id=1212062950]
 script = ExtResource("1_script")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1482161694]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("CapsuleShape3D_player")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.079329096, 0, 0.99684846, 0, 1, 0, -0.99684846, 0, 0.079329096, 0, 0.42185688, 0)
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1676214709]
+transform = Transform3D(-0.9969542, 0, 0.07798937, 0, 1, 0, -0.07798937, 0, -0.9969542, 0, 0.42185688, 0)
 mesh = ExtResource("14_tost")
 
-[node name="BoatMesh" type="MeshInstance3D" parent="."]
+[node name="BoatMesh" type="MeshInstance3D" parent="." unique_id=1999906554]
 transform = Transform3D(-0.5, 0, -4.371139e-08, 0, 0.5, 0, 4.371139e-08, 0, -0.5, 0, 0.3, 0)
 mesh = ExtResource("10_boat")
 surface_material_override/0 = ExtResource("11_boatmat")
 
-[node name="CameraPivot" type="Node3D" parent="."]
+[node name="CameraPivot" type="Node3D" parent="." unique_id=1940615639]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 
-[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot"]
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot" unique_id=1323979466]
 spring_length = 4.0
 margin = 0.1
 
-[node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D"]
+[node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D" unique_id=632041913]
 
-[node name="RodPivot" type="Node3D" parent="."]
+[node name="RodPivot" type="Node3D" parent="." unique_id=765774263]
 transform = Transform3D(1, 0, 0, 0, 0.866025, -0.5, 0, 0.5, 0.866025, 1.0087967, 1.5392947, 0.3878837)
 
-[node name="RodMesh" type="MeshInstance3D" parent="RodPivot"]
+[node name="RodMesh" type="MeshInstance3D" parent="RodPivot" unique_id=1534167906]
 transform = Transform3D(1, 0, 0, 0, 0.051011324, 0.99869853, 0, -0.99869853, 0.051011324, 0.1406166, -0.0062811375, -1.7432559)
 mesh = SubResource("CylinderMesh_rod")
 surface_material_override/0 = SubResource("StandardMaterial3D_boat")
 
-[node name="RodTip" type="Marker3D" parent="RodPivot/RodMesh"]
+[node name="RodTip" type="Marker3D" parent="RodPivot/RodMesh" unique_id=1645922210]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=389451988]
 
-[node name="QuotaUI" parent="CanvasLayer" instance=ExtResource("9_quota")]
+[node name="QuotaUI" parent="CanvasLayer" unique_id=460197824 instance=ExtResource("9_quota")]
 
-[node name="ClockUI" parent="CanvasLayer" instance=ExtResource("5_clock")]
+[node name="ClockUI" parent="CanvasLayer" unique_id=1531592556 instance=ExtResource("5_clock")]
 
-[node name="BaitUI" parent="CanvasLayer" instance=ExtResource("4_bait")]
+[node name="BaitUI" parent="CanvasLayer" unique_id=1231501836 instance=ExtResource("4_bait")]
 
-[node name="InventoryUI" parent="CanvasLayer" instance=ExtResource("2_ui")]
+[node name="InventoryUI" parent="CanvasLayer" unique_id=463201493 instance=ExtResource("2_ui")]
 visible = false
 
-[node name="QuestUI" parent="CanvasLayer" instance=ExtResource("6_quest")]
+[node name="QuestUI" parent="CanvasLayer" unique_id=948693699 instance=ExtResource("6_quest")]
 
-[node name="JournalUI" parent="CanvasLayer" instance=ExtResource("8_journal")]
+[node name="JournalUI" parent="CanvasLayer" unique_id=1373570084 instance=ExtResource("8_journal")]
 visible = false
 
-[node name="AchievementPopup" parent="CanvasLayer" instance=ExtResource("7_achieve")]
+[node name="AchievementPopup" parent="CanvasLayer" unique_id=136075791 instance=ExtResource("7_achieve")]
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
@@ -90,7 +90,7 @@ offset_right = 20.0
 offset_bottom = 60.0
 grow_vertical = 1
 
-[node name="BoatDepthMask" type="MeshInstance3D" parent="."]
+[node name="BoatDepthMask" type="MeshInstance3D" parent="." unique_id=1510926067]
 transform = Transform3D(-0.5, 0, -4.371139e-08, 0, 0.5, 0, 4.371139e-08, 0, -0.5, 0, 0.3, 0)
 material_override = ExtResource("13_depth_mask")
 cast_shadow = 0

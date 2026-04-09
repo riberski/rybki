@@ -9,6 +9,8 @@ signal level_up(new_sp: int)
 signal pending_fish_changed(count: int)
 signal boat_changed(boat_id: String)
 signal expedition_credit_updated(credit_due: int, earnings: int)
+signal boat_durability_changed(current: float, max_value: float)
+signal charms_changed()
 
 var caught_fish: Array[FishResource] = []
 var expedition_fish: Array[FishResource] = [] # Fish caught during current extraction (temporary)
@@ -25,9 +27,50 @@ var current_bait_id: String = "bread"
 
 # Boats and Loadouts
 const DEFAULT_BOAT_ID = "starter"
+const BOAT_MODULE_SLOT_IDS = ["engine_slot", "sonar_slot", "utility_slot_1", "utility_slot_2", "special_slot"]
+const BOAT_MODULE_SLOTS_LABELS = {
+	"engine_slot": "Silnik",
+	"sonar_slot": "Sonar",
+	"utility_slot_1": "Uzytkowy A",
+	"utility_slot_2": "Uzytkowy B",
+	"special_slot": "Specjalny"
+}
+const BOAT_MODULE_DEFINITIONS = {
+	"silent_engine": {
+		"name": "Cichy Silnik",
+		"slots": ["engine_slot"],
+		"desc": "Lepsza kontrola kosztem zasiegu rzutu."
+	},
+	"overdrive_motor": {
+		"name": "Overdrive",
+		"slots": ["engine_slot"],
+		"desc": "Mocny dopalacz, ale mniejsza trwalosc."
+	},
+	"precision_sonar": {
+		"name": "Sonar Precyzyjny",
+		"slots": ["sonar_slot"],
+		"desc": "Zwiesza skutecznosc namierzania ryb."
+	},
+	"insurance_box": {
+		"name": "Skrzynka Ubezpieczeniowa",
+		"slots": ["utility_slot_1", "utility_slot_2"],
+		"desc": "Tanszy ratunek i wyzszy odzysk po porazce."
+	},
+	"greedy_net": {
+		"name": "Chciwa Siec",
+		"slots": ["utility_slot_1", "utility_slot_2"],
+		"desc": "Wiecej wartosci, ale krotsze okno podciecia."
+	},
+	"storm_attractor": {
+		"name": "Wabik Burzowy",
+		"slots": ["special_slot"],
+		"desc": "Wieksza premia, ale ryzyko uszkodzen kadluba."
+	}
+}
 const BOAT_CREDIT_UPGRADE_COST = 50
 const BOAT_CREDIT_RELIC_COST = 100
 const BOAT_STAT_UPGRADE_COST_BASE = 100
+const CHARM_ROLL_COST = 180
 var boats_catalog: Dictionary = {
 	"starter": {"name": "Dinghy", "cost": 0},
 	"skiff": {"name": "Skiff", "cost": 600},
@@ -54,6 +97,13 @@ var boat_speed_level: int = 1
 
 # Current Run Relics
 var active_relics: Array = []
+var owned_charms: Array[String] = []
+
+# Boat durability / module system
+var boat_durability_max: float = 100.0
+var boat_durability: float = 100.0
+var soft_loss_keep_bonus: float = 0.0
+var soft_loss_value_penalty: float = 0.0
 
 # Persistent Run Stats
 var global_value_multiplier: float = 1.0
@@ -108,6 +158,7 @@ var distance_modifier_multiplier: float = 1.0 # Chase distance modifier strength
 # Fish Behavior (World)
 var fish_run_force_multiplier: float = 1.0 # Lower = fish flee slower
 var fish_run_wiggle_multiplier: float = 1.0 # Lower = less erratic flee
+var fish_clone_chance: float = 0.0 # Chance to duplicate caught fish rewards
 
 # Expedition Modifiers
 var expedition_value_multiplier: float = 1.0 # Fish value this expedition
@@ -156,6 +207,7 @@ func start_new_game():
 	
 	# Reset Run Stats
 	active_relics = []
+	owned_charms = []
 	reset_run_modifiers()
 	total_caught_count = 0
 
@@ -240,6 +292,7 @@ func reset_run_modifiers() -> void:
 	# Reset Fish Behavior
 	fish_run_force_multiplier = 1.0
 	fish_run_wiggle_multiplier = 1.0
+	fish_clone_chance = 0.0
 
 	# Reset Expedition Modifiers
 	expedition_value_multiplier = 1.0
@@ -248,6 +301,8 @@ func reset_run_modifiers() -> void:
 	expedition_negative = {}
 	expedition_credit_due = 0
 	expedition_earnings = 0
+	soft_loss_keep_bonus = 0.0
+	soft_loss_value_penalty = 0.0
 
 func _ensure_boat_data() -> void:
 	if owned_boats.is_empty():
@@ -259,11 +314,37 @@ func _ensure_boat_data() -> void:
 	for boat_id in owned_boats:
 		if not boat_loadouts.has(boat_id):
 			boat_loadouts[boat_id] = _create_default_loadout()
+		var loadout: Dictionary = boat_loadouts[boat_id]
+		if not loadout.has("module_slots"):
+			loadout["module_slots"] = {
+				"engine_slot": "",
+				"sonar_slot": "",
+				"utility_slot_1": "",
+				"utility_slot_2": "",
+				"special_slot": ""
+			}
+		boat_loadouts[boat_id] = loadout
+	# Backward compatibility: loadout relics from old saves become unlocked charms.
+	for boat_id in owned_boats:
+		var migrated_loadout: Dictionary = boat_loadouts.get(boat_id, _create_default_loadout())
+		var migrated_relics: Array = migrated_loadout.get("relics", [])
+		for relic_id_any in migrated_relics:
+			var relic_id: String = str(relic_id_any)
+			if relic_id != "" and not owned_charms.has(relic_id):
+				owned_charms.append(relic_id)
+	reset_boat_durability_for_expedition()
 	boat_changed.emit(current_boat_id)
 
 func _create_default_loadout() -> Dictionary:
 	return {
 		"relics": ["", "", "", ""],
+		"module_slots": {
+			"engine_slot": "",
+			"sonar_slot": "",
+			"utility_slot_1": "",
+			"utility_slot_2": "",
+			"special_slot": ""
+		},
 		"upgrades": [
 			{"stat_id": "", "level": 0},
 			{"stat_id": "", "level": 0},
@@ -309,9 +390,75 @@ func set_boat_relic_slot(boat_id: String, slot_index: int, relic_id: String) -> 
 	var loadout = get_boat_loadout(boat_id)
 	if slot_index < 0 or slot_index >= loadout["relics"].size():
 		return
+	if relic_id != "" and not owned_charms.has(relic_id):
+		return
 	loadout["relics"][slot_index] = relic_id
 	boat_loadouts[boat_id] = loadout
 	save_game()
+
+func get_owned_charms() -> Array[String]:
+	var result: Array[String] = []
+	for charm_id_any in owned_charms:
+		result.append(str(charm_id_any))
+	return result
+
+func get_charm_roll_cost() -> int:
+	return CHARM_ROLL_COST
+
+func get_available_charm_roll_count() -> int:
+	if RelicDatabase == null:
+		return 0
+	var available: int = 0
+	for relic_any in RelicDatabase.all_relics:
+		var relic: Dictionary = relic_any
+		var relic_id: String = str(relic.get("id", ""))
+		if relic_id != "" and not owned_charms.has(relic_id):
+			available += 1
+	return available
+
+func roll_random_charm() -> Dictionary:
+	var result: Dictionary = {
+		"ok": false,
+		"reason": "",
+		"charm_id": "",
+		"charm_name": "",
+		"cost": get_charm_roll_cost()
+	}
+	if RelicDatabase == null:
+		result["reason"] = "Brak bazy charmow"
+		return result
+
+	var pool: Array = []
+	for relic_any in RelicDatabase.all_relics:
+		var relic: Dictionary = relic_any
+		var relic_id: String = str(relic.get("id", ""))
+		if relic_id != "" and not owned_charms.has(relic_id):
+			pool.append(relic)
+
+	if pool.is_empty():
+		result["reason"] = "Masz juz wszystkie charmy"
+		return result
+
+	var cost: int = get_charm_roll_cost()
+	if not spend_money(cost):
+		result["reason"] = "Za malo gotowki"
+		return result
+
+	var pick_index: int = randi() % pool.size()
+	var picked: Dictionary = pool[pick_index]
+	var charm_id: String = str(picked.get("id", ""))
+	var charm_name: String = str(picked.get("name", charm_id))
+	if charm_id == "":
+		result["reason"] = "Blad losowania"
+		return result
+
+	owned_charms.append(charm_id)
+	result["ok"] = true
+	result["charm_id"] = charm_id
+	result["charm_name"] = charm_name
+	charms_changed.emit()
+	save_game()
+	return result
 
 func set_boat_upgrade_slot(boat_id: String, slot_index: int, stat_id: String) -> void:
 	var loadout = get_boat_loadout(boat_id)
@@ -358,6 +505,32 @@ func apply_boat_loadout() -> void:
 	var upgrades = loadout.get("upgrades", [])
 	for upgrade in upgrades:
 		_apply_boat_upgrade(upgrade.get("stat_id", ""), int(upgrade.get("level", 0)))
+	_apply_boat_modules(loadout.get("module_slots", {}))
+
+func _apply_boat_modules(module_slots: Dictionary) -> void:
+	for slot_id in BOAT_MODULE_SLOT_IDS:
+		var module_id = str(module_slots.get(slot_id, ""))
+		if module_id == "":
+			continue
+		match module_id:
+			"silent_engine":
+				physics_friction_multiplier *= 1.08
+				cast_range_multiplier *= 0.96
+			"overdrive_motor":
+				can_nitro_boost = true
+				nitro_speed_multiplier = max(nitro_speed_multiplier, 1.24)
+				boat_durability_max *= 0.94
+			"precision_sonar":
+				attraction_bonus *= 1.08
+			"insurance_box":
+				soft_loss_keep_bonus += 0.12
+				soft_loss_value_penalty += 0.08
+			"greedy_net":
+				expedition_value_multiplier *= 1.24
+				hook_window_multiplier *= 0.92
+			"storm_attractor":
+				expedition_value_multiplier *= 1.12
+				boat_durability_max *= 0.95
 
 func _apply_boat_upgrade(stat_id: String, level: int) -> void:
 	if stat_id == "" or level <= 0:
@@ -398,6 +571,82 @@ func start_expedition_credit() -> void:
 	expedition_credit_due = calculate_expedition_credit()
 	expedition_earnings = 0
 	expedition_credit_updated.emit(expedition_credit_due, expedition_earnings)
+
+func set_boat_module_slot(boat_id: String, slot_id: String, module_id: String) -> void:
+	if not BOAT_MODULE_SLOT_IDS.has(slot_id):
+		return
+	if module_id != "" and not _is_module_compatible_with_slot(module_id, slot_id):
+		return
+	var loadout = get_boat_loadout(boat_id)
+	var module_slots: Dictionary = loadout.get("module_slots", {})
+	if module_id != "":
+		for existing_slot in BOAT_MODULE_SLOT_IDS:
+			if existing_slot == slot_id:
+				continue
+			if str(module_slots.get(existing_slot, "")) == module_id:
+				module_slots[existing_slot] = ""
+	module_slots[slot_id] = module_id
+	loadout["module_slots"] = module_slots
+	boat_loadouts[boat_id] = loadout
+	save_game()
+
+func get_boat_module_slot(boat_id: String, slot_id: String) -> String:
+	if not BOAT_MODULE_SLOT_IDS.has(slot_id):
+		return ""
+	var loadout = get_boat_loadout(boat_id)
+	var module_slots: Dictionary = loadout.get("module_slots", {})
+	return str(module_slots.get(slot_id, ""))
+
+func get_boat_module_options(slot_id: String) -> Array:
+	var options: Array = []
+	for module_id in BOAT_MODULE_DEFINITIONS.keys():
+		if _is_module_compatible_with_slot(module_id, slot_id):
+			options.append(module_id)
+	options.sort()
+	return options
+
+func get_boat_module_display_name(module_id: String) -> String:
+	if module_id == "":
+		return "(pusto)"
+	return str(BOAT_MODULE_DEFINITIONS.get(module_id, {}).get("name", module_id))
+
+func get_boat_module_description(module_id: String) -> String:
+	if module_id == "":
+		return "Brak modulu."
+	return str(BOAT_MODULE_DEFINITIONS.get(module_id, {}).get("desc", ""))
+
+func get_boat_module_slot_label(slot_id: String) -> String:
+	return str(BOAT_MODULE_SLOTS_LABELS.get(slot_id, slot_id))
+
+func _is_module_compatible_with_slot(module_id: String, slot_id: String) -> bool:
+	if module_id == "":
+		return true
+	if not BOAT_MODULE_DEFINITIONS.has(module_id):
+		return false
+	var allowed_slots: Array = BOAT_MODULE_DEFINITIONS[module_id].get("slots", [])
+	return allowed_slots.has(slot_id)
+
+func _get_boat_base_durability(boat_id: String) -> float:
+	match boat_id:
+		"skiff":
+			return 120.0
+		"cutter":
+			return 145.0
+		_:
+			return 100.0
+
+func reset_boat_durability_for_expedition() -> void:
+	boat_durability_max = _get_boat_base_durability(current_boat_id)
+	boat_durability = boat_durability_max
+	boat_durability_changed.emit(boat_durability, boat_durability_max)
+
+func damage_boat_durability(amount: float, reason: String = "collision") -> void:
+	if amount <= 0.0:
+		return
+	boat_durability = max(0.0, boat_durability - amount)
+	boat_durability_changed.emit(boat_durability, boat_durability_max)
+	if boat_durability <= 0.0 and TimeManager and TimeManager.has_method("trigger_emergency_state"):
+		TimeManager.trigger_emergency_state(reason)
 
 func register_expedition_earnings(amount: int) -> void:
 	if amount <= 0:
@@ -467,6 +716,11 @@ func add_expedition_fish(fish: FishResource):
 	expedition_fish.append(fish)
 	var value = int(fish.value * global_value_multiplier * expedition_value_multiplier)
 	register_expedition_earnings(value)
+
+	# Item effects like Fish Clone can duplicate expedition rewards.
+	if fish_clone_chance > 0.0 and randf() < fish_clone_chance:
+		expedition_fish.append(fish)
+		register_expedition_earnings(value)
 	# Emit to update contract progress and any listeners during a run
 	emit_signal("inventory_updated", fish)
 	save_game()
@@ -548,6 +802,50 @@ func clear_expedition_modifiers() -> void:
 	expedition_credit_due = 0
 	expedition_earnings = 0
 	expedition_credit_updated.emit(expedition_credit_due, expedition_earnings)
+
+func calculate_rescue_cost() -> int:
+	var base_ratio: float = 0.30
+	var adjusted_ratio: float = float(max(0.18, base_ratio - soft_loss_value_penalty))
+	return max(50, int(round(float(expedition_earnings) * adjusted_ratio)))
+
+func handle_expedition_failure_with_soft_loss(try_paid_rescue: bool = false) -> Dictionary:
+	var result := {
+		"kept": 0,
+		"lost": 0,
+		"ratio": 0.0,
+		"rescue_paid": false,
+		"rescue_cost": 0
+	}
+	if expedition_fish.is_empty():
+		return result
+
+	var rescue_cost: int = calculate_rescue_cost()
+	var keep_ratio: float = randf_range(0.4, 0.7) + soft_loss_keep_bonus
+	if try_paid_rescue and can_afford(rescue_cost):
+		spend_money(rescue_cost)
+		keep_ratio = max(0.7, keep_ratio)
+		result["rescue_paid"] = true
+		result["rescue_cost"] = rescue_cost
+
+	keep_ratio = clamp(keep_ratio, 0.4, 0.85)
+	result["ratio"] = keep_ratio
+
+	var sorted_fish: Array[FishResource] = []
+	for fish in expedition_fish:
+		sorted_fish.append(fish)
+	sorted_fish.sort_custom(func(a: FishResource, b: FishResource): return a.value > b.value)
+
+	var keep_count: int = max(1, int(round(float(sorted_fish.size()) * keep_ratio)))
+	for i in range(min(keep_count, sorted_fish.size())):
+		pending_fish.append(sorted_fish[i])
+
+	result["kept"] = min(keep_count, sorted_fish.size())
+	result["lost"] = max(0, sorted_fish.size() - result["kept"])
+
+	pending_fish_changed.emit(pending_fish.size())
+	discard_expedition()
+	save_game()
+	return result
 
 func _apply_expedition_modifier(mod: Dictionary) -> void:
 	if mod.has("value_mult"):
@@ -733,6 +1031,7 @@ func save_game():
 		"bait_inventory": bait_inventory,
 		"current_bait_id": valid_bait_id,
 		"active_relics": active_relics,
+		"owned_charms": owned_charms,
 		"stats": {
 			"value_mult": global_value_multiplier,
 			"reel_mult": reel_speed_multiplier,
@@ -797,6 +1096,12 @@ func load_game():
 		# Progresja
 		if data.has("active_relics"): active_relics = data["active_relics"]
 		else: active_relics = []
+		if data.has("owned_charms"):
+			owned_charms = []
+			for charm_any in data["owned_charms"]:
+				owned_charms.append(str(charm_any))
+		else:
+			owned_charms = []
 		
 		if data.has("stats"):
 			var stats = data["stats"]

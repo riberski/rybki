@@ -1,1 +1,2 @@
-res://src/Main3D.tscn
+res://src/ui/lobby_world.gd
+res://src/main3d.gd

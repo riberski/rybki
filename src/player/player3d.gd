@@ -23,11 +23,9 @@ var splash_fx_scene = preload("res://src/fx/splash_particles.tscn")
 var was_underwater = false
 var min_splash_velocity = -1.5 # Prędkość uderzenia wymagana do plusku
 var fish_preview_mesh_paths := [
-	"res://src/assets/Fish1.obj",
-	"res://src/assets/Fish2.obj",
-	"res://src/assets/Fish3.obj"
+	"res://src/assets/ryby/Fish1.obj"
 ]
-var fish_preview_meshes: Array[ArrayMesh] = []
+var fish_preview_meshes: Array[Mesh] = []
 
 @onready var camera_pivot = $CameraPivot
 @onready var camera = $CameraPivot/SpringArm3D/Camera3D
@@ -43,7 +41,7 @@ var fish_preview_mesh_instance: MeshInstance3D
 var fish_preview_hide_timer: Timer
 
 @export var fish_preview_height := 1.0
-@export var fish_preview_duration := 2.0
+@export var fish_preview_duration := 3.0
 @export var fish_preview_scale := Vector3.ONE * 0.35
 
 var direction := Vector3.ZERO
@@ -51,6 +49,7 @@ var rotation_y := 0.0
 var default_rod_rotation: Vector3
 
 var time_passed := 0.0
+var _storm_damage_tick := 0.0
 
 # Store initial rotation to allow manual editor adjustments
 var initial_mesh_basis: Basis
@@ -73,6 +72,10 @@ var _notification_serial: int = 0
 var current_interactable = null
 var area_interactable = null # Set by triggers like Shop
 var is_casting_anim = false
+var _is_cast_button_held := false
+var _cast_hold_time := 0.0
+@export var min_cast_charge_time := 0.1
+@export var max_cast_charge_time := 1.2
 
 # Camera Shake Params
 var shake_strength: float = 0.0
@@ -131,8 +134,19 @@ func _setup_fish_preview():
 	fish_preview_meshes.clear()
 	for mesh_path in fish_preview_mesh_paths:
 		var loaded = load(mesh_path)
-		if loaded is ArrayMesh:
+		if loaded is Mesh:
 			fish_preview_meshes.append(loaded)
+		elif loaded is PackedScene:
+			var scene_instance: Node = (loaded as PackedScene).instantiate()
+			var mesh_node: MeshInstance3D = scene_instance.find_child("MeshInstance3D", true, false) as MeshInstance3D
+			if mesh_node == null:
+				for child in scene_instance.get_children():
+					if child is MeshInstance3D:
+						mesh_node = child as MeshInstance3D
+						break
+			if mesh_node and mesh_node.mesh:
+				fish_preview_meshes.append(mesh_node.mesh)
+			scene_instance.queue_free()
 
 	fish_preview_hide_timer = Timer.new()
 	fish_preview_hide_timer.one_shot = true
@@ -144,24 +158,31 @@ func _setup_fish_preview():
 	fish_preview_mesh_instance.scale = fish_preview_scale
 	fish_preview_mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 
-	if player_mesh:
-		player_mesh.add_child(fish_preview_mesh_instance)
-	else:
-		add_child(fish_preview_mesh_instance)
+	add_child(fish_preview_mesh_instance)
 
-	fish_preview_mesh_instance.position = Vector3(0.0, fish_preview_height, 0.0)
+	fish_preview_mesh_instance.position = Vector3(0.0, fish_preview_height + 1.05, 0.0)
 
 func _on_fish_caught(fish_resource):
-	if fish_preview_meshes.is_empty() or fish_preview_mesh_instance == null:
+	if fish_preview_mesh_instance == null:
 		return
 
-	var mesh_index := randi() % fish_preview_meshes.size()
-	if fish_resource and fish_resource.get("name") != null:
-		mesh_index = abs(String(fish_resource.name).hash()) % fish_preview_meshes.size()
+	var preview_mesh: Mesh = null
+	if not fish_preview_meshes.is_empty():
+		preview_mesh = fish_preview_meshes[0]
+	if fish_resource != null and fish_resource is FishResource and fish_resource.mesh != null:
+		preview_mesh = fish_resource.mesh
+	if preview_mesh == null:
+		preview_mesh = SphereMesh.new()
 
-	fish_preview_mesh_instance.mesh = fish_preview_meshes[mesh_index]
+	fish_preview_mesh_instance.mesh = preview_mesh
 	fish_preview_mesh_instance.rotation = Vector3(0.0, PI, 0.0)
-	fish_preview_mesh_instance.position = Vector3(0.0, fish_preview_height, 0.0)
+	fish_preview_mesh_instance.position = Vector3(0.0, fish_preview_height + 1.05, 0.0)
+
+	var fish_weight: float = 1.0
+	if fish_resource != null and fish_resource is FishResource:
+		fish_weight = max(0.2, fish_resource.base_weight)
+	var weight_scale_factor: float = clamp(0.55 + fish_weight * 0.22, 0.45, 2.4)
+	fish_preview_mesh_instance.scale = fish_preview_scale * weight_scale_factor
 	fish_preview_mesh_instance.visible = true
 
 	if fish_preview_hide_timer:
@@ -185,9 +206,30 @@ func spawn_splash(water_y_pos: float):
 
 	
 func _physics_process(delta):
+	if _is_cast_button_held and not _is_gameplay_input_blocked():
+		_cast_hold_time += delta
+		_cast_hold_time = min(_cast_hold_time, max_cast_charge_time)
+
 	var gameplay_blocked := _is_gameplay_input_blocked()
 
 	# Movement - TANK CONTROLS (Independent of Camera)
+	var steering_multiplier := 1.0
+	var thrust_multiplier := 1.0
+	if WeatherManager:
+		if WeatherManager.current_weather == WeatherManager.WeatherType.RAIN:
+			steering_multiplier = 0.92
+		elif WeatherManager.current_weather == WeatherManager.WeatherType.STORM:
+			steering_multiplier = 0.78
+			thrust_multiplier = 0.85
+			velocity.x += randf_range(-0.35, 0.35) * delta
+			velocity.z += randf_range(-0.35, 0.35) * delta
+			_storm_damage_tick += delta
+			if _storm_damage_tick >= 4.0:
+				_storm_damage_tick = 0.0
+				if InventoryManager and TimeManager and TimeManager.extraction_active:
+					InventoryManager.damage_boat_durability(0.6, "storm")
+		else:
+			_storm_damage_tick = 0.0
 	
 	# Rotation (A/D)
 	# "move_right" (D) -> rotate negative (clockwise)
@@ -196,7 +238,7 @@ func _physics_process(delta):
 	if not gameplay_blocked:
 		turn_input = Input.get_axis("move_right", "move_left")
 	if turn_input:
-		rotation_y += turn_input * 2.5 * delta # 2.5 radians/sec turn speed
+		rotation_y += turn_input * 2.5 * steering_multiplier * delta # 2.5 radians/sec turn speed
 	
 	# Movement (W/S)
 	# "move_forward" (W) -> positive value
@@ -216,7 +258,7 @@ func _physics_process(delta):
 	var move_dir = -boat_forward
 	
 	# Mechanic: NITRO BOOST
-	var current_speed = speed
+	var current_speed = speed * thrust_multiplier
 	if not gameplay_blocked and InventoryManager and InventoryManager.can_nitro_boost:
 		if Input.is_action_pressed("sprint") or Input.is_key_pressed(KEY_SHIFT):
 			current_speed *= InventoryManager.nitro_speed_multiplier
@@ -360,7 +402,25 @@ func _physics_process(delta):
 	
 	was_underwater = is_underwater
 	
+	var speed_before_collision := Vector2(velocity.x, velocity.z).length()
 	move_and_slide()
+
+	if InventoryManager and TimeManager and TimeManager.extraction_active:
+		for i in range(get_slide_collision_count()):
+			var collision := get_slide_collision(i)
+			if collision == null:
+				continue
+			var now_sec := Time.get_ticks_msec() / 1000.0
+			if now_sec - last_impact_time < impact_cooldown:
+				continue
+			if speed_before_collision < 6.0:
+				continue
+			var damage := (speed_before_collision - 5.0) * 1.3
+			if WeatherManager and WeatherManager.current_weather == WeatherManager.WeatherType.STORM:
+				damage *= 1.2
+			InventoryManager.damage_boat_durability(clamp(damage, 0.6, 10.0), "collision")
+			last_impact_time = now_sec
+			break
 	
 	# Rotation Visuals
 	# Calculate the base rotation (Y-axis steering)
@@ -443,6 +503,31 @@ func _input(event):
 		toggle_ui(journal_ui)
 		return
 
+	if event.is_action_pressed("cast_rod") and not event.is_echo():
+		if not _is_gameplay_input_blocked() and fishing_manager and not is_casting_anim:
+			var fish_state: int = int(fishing_manager.get("current_state"))
+			if fish_state == 0:
+				_is_cast_button_held = true
+				_cast_hold_time = 0.0
+			else:
+				# In WAITING/BITING/REELING states, cast input acts as hook/reel action.
+				fishing_manager.try_hook()
+		return
+
+	if event.is_action_released("cast_rod"):
+		if _is_cast_button_held and fishing_manager and fishing_manager.get("current_state") == 0:
+			var hold_time = max(_cast_hold_time, min_cast_charge_time)
+			var t = inverse_lerp(min_cast_charge_time, max_cast_charge_time, hold_time)
+			var charge = lerp(0.7, 1.7, clamp(t, 0.0, 1.0))
+			var cast_dir = -camera_pivot.global_transform.basis.z
+			var cast_origin: Vector3 = global_position + Vector3.UP * 1.3
+			if rod_tip and is_instance_valid(rod_tip):
+				cast_origin = rod_tip.global_position
+			fishing_manager.start_casting(cast_origin, cast_dir, charge)
+		_is_cast_button_held = false
+		_cast_hold_time = 0.0
+		return
+
 	if _is_gameplay_input_blocked():
 		return
 
@@ -457,11 +542,7 @@ func _input(event):
 		if fishing_manager:
 			# Access state via the manager script class if needed, or check logic
 			# Assuming fishing_manager has public state variable
-			if fishing_manager.get("current_state") == 0: # IDLE
-				if not is_casting_anim and not current_interactable:
-					var cast_dir = -camera_pivot.global_transform.basis.z
-					fishing_manager.start_casting(rod_tip.global_position, cast_dir)
-			else:
+			if fishing_manager.get("current_state") != 0:
 				# If not IDLE (Waiting, Biting, etc), try to hook/reel
 				fishing_manager.try_hook()
 

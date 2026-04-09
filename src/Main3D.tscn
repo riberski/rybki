@@ -70,7 +70,7 @@ subdivide_depth = 96
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_water"]
 render_priority = 0
 shader = ExtResource("16_water_shader")
-shader_parameter/color = Color(0.6584971, 0.80355096, 1, 0.8)
+shader_parameter/color = Color(0.6584971, 0.80355096, 1, 1)
 shader_parameter/roughness = 0.1
 shader_parameter/gloss_roughness = 0.03
 shader_parameter/reflect_strength = 0.9

@@ -37,6 +37,7 @@ DailyRewardManager="*res://src/systems/daily_reward_manager.gd"
 ChallengeManager="*res://src/systems/challenge_manager.gd"
 ProgressionManager="*res://src/systems/progression_manager.gd"
 RunMetrics="*res://src/systems/run_metrics.gd"
+RiskManager="*res://src/systems/risk_manager.gd"
 
 [display]
 

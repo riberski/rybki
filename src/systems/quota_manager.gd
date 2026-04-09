@@ -7,6 +7,7 @@ signal quota_met
 signal quota_failed
 signal draft_phase_started
 signal hull_updated(current: float, max: float)
+signal deadline_updated(days_left: int, cycle_days: int)
 
 # Run State
 var current_day: int = 1
@@ -14,6 +15,12 @@ var quota_target: int = 100
 var base_quota: int = 100
 var difficulty_scaler: float = 1.3
 const DAILY_BREAD_RATION = 15
+const QUOTA_CYCLE_DAYS = 3
+const QUOTA_FAIL_HULL_PENALTY = 22.0
+const QUOTA_FAIL_CASH_PENALTY_RATIO = 0.20
+const QUOTA_SUCCESS_BONUS_BREAD = 4
+
+var days_left_in_cycle: int = QUOTA_CYCLE_DAYS
 
 # Hull System
 var hull_integrity: float = 100.0
@@ -69,6 +76,7 @@ func start_new_run():
 	
 	# Initial Quota
 	quota_target = base_quota
+	days_left_in_cycle = QUOTA_CYCLE_DAYS
 	
 	InventoryManager.start_new_game()
 	# Give Bread Ration immediately
@@ -77,6 +85,7 @@ func start_new_run():
 	
 	quota_updated.emit(InventoryManager.money, quota_target)
 	hull_updated.emit(hull_integrity, max_hull)
+	deadline_updated.emit(days_left_in_cycle, QUOTA_CYCLE_DAYS)
 	if RunMetrics:
 		RunMetrics.record_run_started()
 		RunMetrics.record_day_advanced(current_day, quota_target)
@@ -94,20 +103,16 @@ func clear_pending_draft():
 
 func advance_to_next_day():
 	current_day += 1
+	days_left_in_cycle = max(0, days_left_in_cycle - 1)
 	
 	# Solar Panel / Daily Repair Logic
 	if InventoryManager and InventoryManager.daily_hull_repair > 0:
 		repair_hull(InventoryManager.daily_hull_repair)
 		print("Daily Repair: healed ", InventoryManager.daily_hull_repair)
 
-	# Increase Quota difficulty
-	var scaler = difficulty_scaler
-	if InventoryManager and InventoryManager.quota_reduction_percent > 0:
-		# If user has quota reduction, growth is slower
-		# E.g. 1.3 -> 1.2
-		scaler = max(1.1, scaler - InventoryManager.quota_reduction_percent)
-	
-	quota_target = int(float(quota_target) * scaler)
+	if days_left_in_cycle <= 0:
+		_resolve_quota_deadline()
+		days_left_in_cycle = QUOTA_CYCLE_DAYS
 	
 	# Apply Interest
 	if InventoryManager and InventoryManager.daily_interest_rate > 0:
@@ -127,6 +132,7 @@ func advance_to_next_day():
 	
 	day_passed.emit(current_day)
 	quota_updated.emit(InventoryManager.money, quota_target)
+	deadline_updated.emit(days_left_in_cycle, QUOTA_CYCLE_DAYS)
 	if RunMetrics:
 		RunMetrics.record_day_advanced(current_day, quota_target)
 	
@@ -134,6 +140,36 @@ func advance_to_next_day():
 	
 	# Heal hull slightly
 	repair_hull(10.0)
+
+func _resolve_quota_deadline() -> void:
+	if InventoryManager == null:
+		return
+
+	if InventoryManager.money >= quota_target:
+		quota_met.emit()
+		InventoryManager.add_bait("bread", QUOTA_SUCCESS_BONUS_BREAD)
+		# Grow next quota after successful cycle.
+		var scaler: float = difficulty_scaler
+		if InventoryManager.quota_reduction_percent > 0:
+			scaler = max(1.1, scaler - InventoryManager.quota_reduction_percent)
+		quota_target = int(float(quota_target) * scaler)
+		print("Quota met. Next target: ", quota_target)
+		return
+
+	quota_failed.emit()
+	var cash_penalty: int = int(round(float(quota_target) * QUOTA_FAIL_CASH_PENALTY_RATIO))
+	InventoryManager.money = max(0, InventoryManager.money - cash_penalty)
+	InventoryManager.money_updated.emit(InventoryManager.money)
+	damage_hull(QUOTA_FAIL_HULL_PENALTY)
+	print("Quota failed. Penalty cash: ", cash_penalty, " hull: ", QUOTA_FAIL_HULL_PENALTY)
+
+func get_deadline_status() -> Dictionary:
+	return {
+		"day": current_day,
+		"quota_target": quota_target,
+		"days_left": days_left_in_cycle,
+		"cycle_days": QUOTA_CYCLE_DAYS
+	}
 
 func _game_over(reason):
 	# Calculate Meta Currency Reward
@@ -154,6 +190,7 @@ func get_save_data() -> Dictionary:
 	return {
 		"day": current_day,
 		"quota": quota_target,
+		"days_left_in_cycle": days_left_in_cycle,
 		"hull": hull_integrity,
 		"max_hull": max_hull,
 		"damage_reduction": hull_damage_reduction,
@@ -164,6 +201,7 @@ func get_save_data() -> Dictionary:
 func load_save_data(data: Dictionary):
 	current_day = data.get("day", 1)
 	quota_target = data.get("quota", 150)
+	days_left_in_cycle = int(data.get("days_left_in_cycle", QUOTA_CYCLE_DAYS))
 	hull_integrity = data.get("hull", 100.0)
 	max_hull = data.get("max_hull", 100.0)
 	hull_damage_reduction = data.get("damage_reduction", 0.0)
@@ -173,4 +211,5 @@ func load_save_data(data: Dictionary):
 	# Emit updates to sync UI
 	quota_updated.emit(InventoryManager.money, quota_target)
 	hull_updated.emit(hull_integrity, max_hull)
+	deadline_updated.emit(days_left_in_cycle, QUOTA_CYCLE_DAYS)
 	print("QuotaManager Loaded: Day %d Quota %d" % [current_day, quota_target])

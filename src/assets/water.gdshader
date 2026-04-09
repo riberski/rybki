@@ -2,7 +2,7 @@ shader_type spatial;
 render_mode specular_schlick_ggx; // Smooth specular for reflective water
 
 uniform sampler2D albedo_texture : source_color;
-uniform vec4 color : source_color = vec4(0.0, 0.5, 1.0, 0.8);
+uniform vec4 color : source_color = vec4(0.0, 0.5, 1.0, 1.0);
 uniform float roughness : hint_range(0.0, 1.0) = 0.12;
 uniform float gloss_roughness : hint_range(0.0, 1.0) = 0.03;
 uniform float reflect_strength : hint_range(0.0, 1.0) = 0.9;
@@ -103,10 +103,9 @@ void fragment() {
 	
 	float dist_ellipse = length((local_pos - mask_offset) / mask_size);
 	
-	// Create hole
-	float mask = smoothstep(0, 0, dist_ellipse);
-	
-	ALPHA = color.a * mask;
+	// Keep this calculation for potential future boat interaction tuning,
+	// but render water as fully opaque.
+	float _mask = smoothstep(0, 0, dist_ellipse);
 
 	// Fresnel-based reflections: stronger and sharper at grazing angles
 	vec3 view_dir = normalize(VIEW);

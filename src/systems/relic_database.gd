@@ -5,216 +5,256 @@ extends Node
 
 var all_relics = [
 	{
-		"id": "turbo_reel",
-		"name": "Turbo Reel", 
-		"desc": "+12% Reel Speed", 
-		"effect": "reel_speed",
+		"id": "mapa_hotspotow",
+		"name": "Mapa",
+		"desc": "Pokazuje hotspoty ryb (+attraction)",
+		"effect": "attraction",
 		"value": 0.12
 	},
 	{
-		"id": "titanium_line",
-		"name": "Titanium Line", 
-		"desc": "+18% Line Strength (Less Tension Gain)", 
-		"effect": "line_strength",
-		"value": 0.18
-	},
-	{
-		"id": "scented_lure",
-		"name": "Scented Lure", 
-		"desc": "+20% Attraction (Faster Bites)", 
-		"effect": "attraction",
-		"value": 0.20
-	},
-	{
-		"id": "carbon_fiber_rod",
-		"name": "Carbon Fiber Rod", 
-		"desc": "+25% Cast Range", 
-		"effect": "cast_range",
-		"value": 0.25
-	},
-	{
-		"id": "ghost_net",
-		"name": "Ghost Net", 
-		"desc": "Start Minigame at +20% Progress", 
-		"effect": "minigame_start",
-		"value": 0.20
-	},
-	{
-		"id": "barbed_hook",
-		"name": "Barbed Hook", 
-		"desc": "-50% Progress Drain Speed", 
-		"effect": "minigame_drain",
-		"value": 0.5
-	},
-	{
-		"id": "sticky_gears",
-		"name": "Sticky Gears", 
-		"desc": "Bar Stops Faster (Precision Control)", 
-		"effect": "minigame_glue"
-	},
-	{
-		"id": "quantum_lure",
-		"name": "Quantum Lure", 
-		"desc": "7% Chance to Catch Instantly", 
-		"effect": "auto_catch",
-		"value": 0.07
-	},
-	{
-		"id": "ballast_core",
-		"name": "Ballast Core",
-		"desc": "Heavier Bar (Slower Fall)",
-		"effect": "minigame_gravity",
-		"value": 0.80
-	},
-	{
-		"id": "calm_current",
-		"name": "Calm Current",
-		"desc": "Fish Move Slower, Sometimes Pause",
-		"effect": "fish_behavior_speed",
-		"value": 0.80,
-		"pause_chance": 0.18,
-		"pause_duration": 0.6
-	},
-	{
-		"id": "anchor_charm",
-		"name": "Anchor Charm",
-		"desc": "Fish Flee Slower and Wiggle Less",
-		"effect": "fish_run_force",
-		"value": 0.80,
-		"wiggle_mult": 0.7
-	},
-	{
-		"id": "wide_float",
-		"name": "Wide Float",
-		"desc": "Catch Bar +20%", 
-		"effect": "minigame_bar_size",
-		"value": 0.20
-	},
-	{
-		"id": "focus_reel",
-		"name": "Focus Reel",
-		"desc": "Catch Progress +15%", 
-		"effect": "minigame_catch_speed",
-		"value": 0.15
-	},
-	{
-		"id": "anti_slip",
-		"name": "Anti-Slip",
-		"desc": "Progress Loss -20%", 
-		"effect": "minigame_lose_speed",
-		"value": 0.80
-	},
-	{
-		"id": "power_crank",
-		"name": "Power Crank",
-		"desc": "Reel Force +20%", 
-		"effect": "minigame_reel_force",
-		"value": 0.20
-	},
-	{
-		"id": "soft_spring",
-		"name": "Soft Spring",
-		"desc": "Softer Bounce at Bounds", 
-		"effect": "minigame_bounce",
-		"value": 0.60
-	},
-	{
-		"id": "dart_damper",
-		"name": "Dart Damper",
-		"desc": "Dart Bursts Slower", 
-		"effect": "minigame_dart_speed",
-		"value": 0.75
-	},
-	{
-		"id": "long_hook",
-		"name": "Long Hook",
-		"desc": "Hook Window +40%", 
-		"effect": "hook_window",
-		"value": 1.40
-	},
-	{
-		"id": "quick_bite",
-		"name": "Quick Bite",
-		"desc": "Bites 20% Faster", 
-		"effect": "bite_time",
-		"value": 0.80
-	},
-	{
-		"id": "heavy_cast",
-		"name": "Heavy Cast",
-		"desc": "Cast Force +20%", 
-		"effect": "cast_force",
-		"value": 0.20
-	},
-	{
-		"id": "dead_stick",
-		"name": "Dead Stick",
-		"desc": "Fish Pause More Often", 
-		"effect": "fish_pause",
-		"pause_chance": 0.25,
-		"pause_duration": 0.8
-	},
-	{
-		"id": "drift_limiter",
-		"name": "Drift Limiter",
-		"desc": "Fish Wiggle Less When Fleeing", 
-		"effect": "fish_run_wiggle",
-		"value": 0.70
-	},
-	{
-		"id": "thick_cork",
-		"name": "Thick Cork",
-		"desc": "Catch Bar Minimum Size 60", 
-		"effect": "minigame_bar_min",
-		"value": 60.0
-	},
-	{
-		"id": "steady_targets",
-		"name": "Steady Targets",
-		"desc": "Fish Hold Target Longer", 
-		"effect": "minigame_fish_stability",
-		"value": 1.40
-	},
-	{
-		"id": "safety_net",
-		"name": "Safety Net",
-		"desc": "One-Time Fail Grace in Minigame", 
-		"effect": "minigame_fail_grace"
-	},
-	{
-		"id": "rescue_line",
-		"name": "Rescue Line",
-		"desc": "Fail Grace Restores 25%", 
-		"effect": "minigame_fail_grace_amount",
-		"value": 0.25
-	},
-	{
-		"id": "headstart",
-		"name": "Headstart",
-		"desc": "Start Minigame at 35%", 
-		"effect": "minigame_start_floor",
+		"id": "noz",
+		"name": "Noz",
+		"desc": "Szybkie ponowne zarzucenie (retry +35%)",
+		"effect": "bite_retry",
 		"value": 0.35
 	},
 	{
-		"id": "gyro_grip",
-		"name": "Gyro Grip",
-		"desc": "Extra Bar Damping", 
-		"effect": "minigame_bar_damping",
-		"value": 6.0
+		"id": "kompas",
+		"name": "Kompas",
+		"desc": "Latwiejsza droga ucieczki",
+		"effect": "distance_modifier",
+		"value": 1.12
 	},
 	{
-		"id": "second_chance",
-		"name": "Second Chance",
-		"desc": "25% Chance for Quick Re-Bite", 
-		"effect": "bite_retry",
+		"id": "krotkofalowka",
+		"name": "Krotkofalowka",
+		"desc": "Lepsza koordynacja (okno podciecia +20%)",
+		"effect": "hook_window",
+		"value": 1.20
+	},
+	{
+		"id": "sprezyna",
+		"name": "Sprezyna",
+		"desc": "Pozwala skakac lodka",
+		"effect": "boat_jump",
+		"value": 5.8
+	},
+	{
+		"id": "zlota_przyneta",
+		"name": "Zlota przyneta",
+		"desc": "Zwiesza szanse na rzadkie ryby",
+		"effect": "luck_bonus",
+		"value": 0.16
+	},
+	{
+		"id": "magnes",
+		"name": "Magnes",
+		"desc": "Wiecej skarbowej wartosci",
+		"effect": "value_mult",
+		"value": 1.10
+	},
+	{
+		"id": "zamrazajaca_wedka",
+		"name": "Zamrazajaca wedka",
+		"desc": "Spowalnia ryby po trafieniu",
+		"effect": "fish_behavior_speed",
+		"value": 0.82,
+		"pause_chance": 0.12,
+		"pause_duration": 0.45
+	},
+	{
+		"id": "elektryczna_przyneta",
+		"name": "Elektryczna przyneta",
+		"desc": "Oglusza ryby lokalnie",
+		"effect": "fish_pause",
+		"pause_chance": 0.28,
+		"pause_duration": 0.85
+	},
+	{
+		"id": "boja_sonarowa",
+		"name": "Boja sonarowa",
+		"desc": "Pokazuje miejsca z duza iloscia ryb",
+		"effect": "attraction",
+		"value": 0.14
+	},
+	{
+		"id": "klon_ryby",
+		"name": "Klon ryby",
+		"desc": "Szansa sklonowania ostatniej ryby",
+		"effect": "fish_clone",
+		"value": 0.22
+	},
+	{
+		"id": "dopalacz",
+		"name": "Dopalacz",
+		"desc": "Chwilowe przyspieszenie lodzi",
+		"effect": "nitro",
+		"value": 1.32
+	},
+	{
+		"id": "beczka_paliwa",
+		"name": "Beczka z paliwem",
+		"desc": "Natychmiastowa poprawa kondycji lodzi",
+		"effect": "hull_bonus",
+		"value": 1.12
+	},
+	{
+		"id": "tarcza_lodzi",
+		"name": "Tarcza lodzi",
+		"desc": "Wzmacnia kadlub i linie",
+		"effect": "line_strength",
+		"value": 0.20
+	},
+	{
+		"id": "wirnik_wodny",
+		"name": "Wirnik wodny",
+		"desc": "Tworzy wir spowalniajacy uciekajace ryby",
+		"effect": "fish_run_force",
+		"value": 0.76,
+		"wiggle_mult": 0.82
+	},
+	{
+		"id": "mini_lodka_ratunkowa",
+		"name": "Mini lodka ratunkowa",
+		"desc": "Latwiejszy powrot po porazce",
+		"effect": "rescue_boost",
+		"keep_bonus": 0.22,
+		"value_penalty": 0.12
+	},
+	{
+		"id": "kotwica_bojowa",
+		"name": "Kotwica bojowa",
+		"desc": "Hamowanie awaryjne lodzi",
+		"effect": "anchor_brake"
+	},
+	{
+		"id": "lornetka",
+		"name": "Lornetka",
+		"desc": "Wiekszy zasieg obserwacji/rzutu",
+		"effect": "cast_range",
+		"value": 0.20
+	},
+	{
+		"id": "mapa_skarbow",
+		"name": "Mapa skarbow",
+		"desc": "Losowe miejsce z lootem (wieksza wartosc)",
+		"effect": "value_mult",
+		"value": 1.12
+	},
+	{
+		"id": "latarka_uv",
+		"name": "Latarka UV",
+		"desc": "Ujawnia ukryte obiekty i ryby",
+		"effect": "luck_bonus",
+		"value": 0.10
+	},
+	{
+		"id": "mikstura_niewidzialnosci",
+		"name": "Mikstura niewidzialnosci",
+		"desc": "Latwiej uniknac zagrozenia",
+		"effect": "fish_behavior_speed",
+		"value": 0.90,
+		"pause_chance": 0.10,
+		"pause_duration": 0.30
+	},
+	{
+		"id": "spowalniacz_czasu",
+		"name": "Spowalniacz czasu",
+		"desc": "Na chwile spowalnia wszystko wokol",
+		"effect": "minigame_dart_speed",
+		"value": 0.68
+	},
+	{
+		"id": "falszywy_kompas",
+		"name": "Falszywy kompas",
+		"desc": "Mylace wskazania dla innych (u Ciebie pewniejsza trasa)",
+		"effect": "distance_modifier",
+		"value": 1.08
+	},
+	{
+		"id": "megafon",
+		"name": "Megafon",
+		"desc": "Glos slychac dalej (szybsze brania)",
+		"effect": "bite_time",
+		"value": 0.86
+	},
+	{
+		"id": "pulapka_sieciowa",
+		"name": "Pulapka sieciowa",
+		"desc": "Unieruchamia cele na chwile (stun ryb)",
+		"effect": "fish_pause",
+		"pause_chance": 0.20,
+		"pause_duration": 1.00
+	},
+	{
+		"id": "przywolanie_osmiornicy",
+		"name": "Przywolanie osmiornicy",
+		"desc": "Agresywny efekt obszarowy",
+		"effect": "auto_catch",
+		"value": 0.12
+	},
+	{
+		"id": "kradnaca_wedka",
+		"name": "Kradnaca wedka",
+		"desc": "Przechwytuje dodatkowa zdobycz",
+		"effect": "fish_clone",
+		"value": 0.16
+	},
+	{
+		"id": "bomba_wodna",
+		"name": "Bomba wodna",
+		"desc": "Silny impuls na wodzie",
+		"effect": "minigame_reel_force",
 		"value": 0.25
 	},
 	{
-		"id": "tether_line",
-		"name": "Tether Line",
-		"desc": "Distance Penalty Weaker", 
-		"effect": "distance_modifier",
-		"value": 1.15
+		"id": "sliska_plama",
+		"name": "Sliska plama",
+		"desc": "Trudniejsza kontrola, ale wiekszy zysk",
+		"effect": "slippery_tradeoff",
+		"value": 1.15,
+		"friction_mult": 0.88
+	},
+	{
+		"id": "ropucha_szczescia",
+		"name": "Ropucha szczescia",
+		"desc": "Losowy bonus lub kara",
+		"effect": "random_luck"
+	},
+	{
+		"id": "kosc_losu",
+		"name": "Kosc losu",
+		"desc": "Silny losowy efekt",
+		"effect": "random_chaos"
+	},
+	{
+		"id": "czapka_rybaka",
+		"name": "Czapka rybaka",
+		"desc": "Lekki bonus do lowienia",
+		"effect": "attraction",
+		"value": 0.06
+	},
+	{
+		"id": "lustro_klonujace",
+		"name": "Lustro klonujace",
+		"desc": "Tworzy kopie zdobyczy",
+		"effect": "fish_clone",
+		"value": 0.30
+	},
+	{
+		"id": "teczowa_fala",
+		"name": "Teczowa fala",
+		"desc": "Bonusy w obszarze fali",
+		"effect": "rainbow_wave",
+		"value": 1.10
+	},
+	{
+		"id": "duch_rybaka",
+		"name": "Duch rybaka",
+		"desc": "Pomaga automatycznie lowic przez chwile",
+		"effect": "ghost_fisher",
+		"auto_catch": 0.10,
+		"bite_time": 0.88
 	}
 ]
 
@@ -333,3 +373,61 @@ func apply_relic(relic_data: Dictionary):
 		"distance_modifier":
 			if InventoryManager:
 				InventoryManager.distance_modifier_multiplier *= relic_data.get("value", 1.15)
+		"boat_jump":
+			if InventoryManager:
+				InventoryManager.can_boat_jump = true
+				InventoryManager.boat_jump_force = max(InventoryManager.boat_jump_force, relic_data.get("value", 5.5))
+		"luck_bonus":
+			if InventoryManager:
+				InventoryManager.luck_bonus += relic_data.get("value", 0.1)
+		"value_mult":
+			if InventoryManager:
+				InventoryManager.global_value_multiplier *= relic_data.get("value", 1.1)
+		"fish_clone":
+			if InventoryManager:
+				InventoryManager.fish_clone_chance += relic_data.get("value", 0.15)
+		"nitro":
+			if InventoryManager:
+				InventoryManager.can_nitro_boost = true
+				InventoryManager.nitro_speed_multiplier = max(InventoryManager.nitro_speed_multiplier, relic_data.get("value", 1.25))
+		"hull_bonus":
+			if InventoryManager:
+				InventoryManager.boat_durability_max *= relic_data.get("value", 1.1)
+		"rescue_boost":
+			if InventoryManager:
+				InventoryManager.soft_loss_keep_bonus += relic_data.get("keep_bonus", 0.18)
+				InventoryManager.soft_loss_value_penalty += relic_data.get("value_penalty", 0.10)
+		"anchor_brake":
+			if InventoryManager:
+				InventoryManager.can_anchor_brake = true
+		"slippery_tradeoff":
+			if InventoryManager:
+				InventoryManager.global_value_multiplier *= relic_data.get("value", 1.12)
+				InventoryManager.physics_friction_multiplier *= relic_data.get("friction_mult", 0.9)
+		"random_luck":
+			if InventoryManager:
+				var roll: float = randf()
+				if roll < 0.5:
+					InventoryManager.global_value_multiplier *= 1.20
+				else:
+					InventoryManager.global_value_multiplier *= 0.92
+		"random_chaos":
+			if InventoryManager:
+				var chaos_roll: int = randi() % 4
+				match chaos_roll:
+					0:
+						InventoryManager.auto_catch_chance += 0.12
+					1:
+						InventoryManager.minigame_lose_speed_multiplier *= 0.75
+					2:
+						InventoryManager.global_value_multiplier *= 1.25
+					_:
+						InventoryManager.fish_run_force_multiplier *= 0.75
+		"rainbow_wave":
+			if InventoryManager:
+				InventoryManager.global_value_multiplier *= relic_data.get("value", 1.10)
+				InventoryManager.attraction_bonus += 0.10
+		"ghost_fisher":
+			if InventoryManager:
+				InventoryManager.auto_catch_chance += relic_data.get("auto_catch", 0.08)
+				InventoryManager.bite_time_multiplier *= relic_data.get("bite_time", 0.9)

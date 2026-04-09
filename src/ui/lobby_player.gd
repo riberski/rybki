@@ -5,8 +5,9 @@ extends CharacterBody3D
 @export var friction := 8.0
 @export var gravity_multiplier := 1.0
 @export var look_sensitivity := 0.01
-@export var min_pitch_deg := -45.0
-@export var max_pitch_deg := 45.0
+@export var min_pitch_deg := -65.0
+@export var max_pitch_deg := 15.0
+@export var default_pitch_deg := -28.0
 
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
@@ -22,17 +23,29 @@ func _ready() -> void:
 	collision_layer = 1
 	collision_mask = 1
 	add_to_group("lobby_player")
+	_cleanup_legacy_visual_nodes()
 	_ensure_lobby_camera_setup()
 	_disable_mesh_self_collision()
 	_setup_locomotion_animations()
 	set_physics_process(true)
 	set_process_unhandled_input(true)
-	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+func _cleanup_legacy_visual_nodes() -> void:
+	# Some older lobby scenes may still carry mesh-only placeholders.
+	for node_name in ["MeshInstance3D", "AnimatableBody3D"]:
+		var legacy_node := get_node_or_null(node_name)
+		if legacy_node:
+			legacy_node.queue_free()
 
 func _ensure_lobby_camera_setup() -> void:
 	if camera_3d:
 		camera_3d.current = true
+	if camera_pivot:
+		camera_pivot.rotation.x = deg_to_rad(clamp(default_pitch_deg, min_pitch_deg, max_pitch_deg))
 	if spring_arm:
+		# In lobby we prefer stable camera over obstacle push-in near board geometry.
+		spring_arm.collision_mask = 0
 		spring_arm.add_excluded_object(get_rid())
 
 func _disable_mesh_self_collision() -> void:
