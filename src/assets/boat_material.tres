@@ -1,5 +1,10 @@
 [gd_resource type="StandardMaterial3D" format=3 uid="uid://boatmatstd"]
 
+[ext_resource type="Texture2D" path="res://src/assets/mapa1_wood_table_diff_4k.jpg" id="1_wood"]
+
 [resource]
 albedo_color = Color(0.55, 0.56, 0.58, 1)
-roughness = 0.8
+albedo_texture = ExtResource("1_wood")
+uv1_scale = Vector3(0.35, 0.35, 1)
+roughness = 0.68
+metallic = 0.02

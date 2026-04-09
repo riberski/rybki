@@ -11,6 +11,10 @@ var _quota_target: int = 1
 
 func _ready():
 	_ensure_quota_widgets()
+	if hull_label:
+		hull_label.hide()
+	if hull_bar:
+		hull_bar.hide()
 
 	if QuotaManager:
 		if not QuotaManager.hull_updated.is_connected(_update_hull):
@@ -54,13 +58,10 @@ func _ensure_quota_widgets():
 		vbox.add_child(quota_bar)
 
 func _update_hull(current, max_val):
-	if hull_label: hull_label.text = "Hull: %d%%" % int(current)
+	if hull_label:
+		hull_label.hide()
 	if hull_bar:
-		hull_bar.max_value = max_val
-		hull_bar.value = current
-		# Color logic
-		if current < 30: hull_bar.modulate = Color.RED
-		else: hull_bar.modulate = Color.WHITE
+		hull_bar.hide()
 
 func _update_money(amount: int):
 	if money_label:

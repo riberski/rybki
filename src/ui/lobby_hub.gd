@@ -81,6 +81,8 @@ func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_apply_visual_polish()
 	extraction_time_label.text = "Czas ekstrakcji: 20 min (wczesny powrot od 2:00)"
+	if hull_value:
+		hull_value.get_parent().hide()
 	_connect_signals()
 	_refresh_stats()
 	_update_lobby_widgets()
@@ -436,8 +438,8 @@ func _on_nav_plan_expedition_pressed() -> void:
 	_show_page("plan_expedition")
 
 func _refresh_stats() -> void:
-	if QuotaManager:
-		hull_value.text = "%d / %d" % [int(QuotaManager.hull_integrity), int(QuotaManager.max_hull)]
+	if hull_value:
+		hull_value.get_parent().hide()
 
 	if InventoryManager:
 		money_value.text = str(InventoryManager.money)

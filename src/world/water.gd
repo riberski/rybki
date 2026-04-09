@@ -5,14 +5,21 @@ extends MeshInstance3D
 @export var wave_speed := 1.0
 @export var wave_height := 0.5
 @export var wave_frequency := 0.5
+@export var wake_decay := 1.4
+@export var wake_radius := 14.0
 
 var time := 0.0
+var wake_strength := 0.0
+var wake_origin := Vector3.ZERO
 
 func _process(delta):
 	time += delta
+	wake_strength = max(0.0, wake_strength - wake_decay * delta)
 	var mat = get_surface_override_material(0)
 	if mat is ShaderMaterial:
 		mat.set_shader_parameter("wave_time", time)
+		mat.set_shader_parameter("wake_strength", wake_strength)
+		mat.set_shader_parameter("wake_origin", wake_origin)
 
 func _ready():
 	# Update shader parameters just in case they differ
@@ -21,6 +28,13 @@ func _ready():
 		mat.set_shader_parameter("wave_speed", wave_speed)
 		mat.set_shader_parameter("wave_height", wave_height)
 		mat.set_shader_parameter("wave_frequency", wave_frequency)
+		mat.set_shader_parameter("wake_radius", wake_radius)
+		mat.set_shader_parameter("wake_strength", wake_strength)
+		mat.set_shader_parameter("wake_origin", wake_origin)
+
+func trigger_wake_pulse(world_pos: Vector3, strength: float = 0.5):
+	wake_origin = world_pos
+	wake_strength = clamp(max(wake_strength, strength), 0.0, 1.5)
 
 func update_boat_position(pos: Vector3):
 	var mat = get_surface_override_material(0)

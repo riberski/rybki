@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1775572222
+::res://::1775629555
 export_presets.cfg::TextFile::-1::1774677415::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D::1574180981099949917::1774677415::1775313218::1::::<><><>0<>0<>8ebe628f4bf892a74a79b62e4e4e8fa4<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 ::res://data/::1774677415
@@ -33,7 +33,7 @@ przedmioty.md::TextFile::-1::1775562323::0::1::::<><><>0<>0<><>::
 ROADMAP.md::TextFile::-1::1775031970::0::1::::<><><>0<>0<><>::
 SECTORS.md::TextFile::-1::1774677415::0::1::::<><><>0<>0<><>::
 ::res://src/::1775312999
-main3d.gd::GDScript::2038058360942862240::1775562328::0::1::::<>Node3D<><>0<>0<><>::
+main3d.gd::GDScript::2038058360942862240::1775575189::0::1::::<>Node3D<><>0<>0<><>::
 Main3D.tscn::PackedScene::198834432392974046::1775559134::0::1::::<><><>0<>0<><>::uid://4bir2dkvbvk7::::res://src/main3d.gd<>uid://shopobjects::::res://src/world/Shop.tscn<>uid://minigameui::::res://src/ui/fishing_minigame_ui.tscn<>uid://inventoryui::::res://src/ui/inventory_ui.tscn<>uid://d1xiobd701efn::::res://src/ui/quest_ui.tscn<>uid://draftuiscene::::res://src/ui/draft_ui.tscn<>uid://b8dj5h753ryxt::::res://src/ui/clock_ui.tscn<>res://src/ui/quota_ui.tscn<>uid://catchpopup::::res://src/ui/catch_popup.tscn<>uid://dtfiyrl488qqg::::res://src/ui/achievement_popup.tscn<>res://src/ui/shop_ui.tscn<>res://src/ui/journal_ui.tscn<>uid://skilluiuid::::res://src/ui/skill_ui.tscn<>uid://oxiqxclxofw0::::res://src/ui/pause_menu.tscn<>uid://b0nph6gc4fx2::::res://src/world/water.gd<>uid://dil2smi4awj3m::::res://src/assets/water.gdshader<>uid://capbbr3ldy2d0::::res://src/assets/kamyki/kamyk10.obj<>uid://daxhvq7ogyrhv::::res://src/mapa_nowa.glb<>uid://ds3a0704ihalu::::res://src/assets/kamyki/kamyk9.obj<>uid://cs2dof3rw1fhp::::res://src/assets/budynki/sklepik1.obj<>uid://3ew3u21r2n5i::::res://src/assets/drzewa/bush.obj<>uid://cngdjehucpea8::::res://src/assets/kamyki/kamyk2.obj<>uid://chbgsdp70eb11::::res://src/assets/kamyki/sciezka.obj<>uid://6iq5p7o5fady::::res://src/assets/drzewa/drzewo1.obj<>uid://bfeg5rfvejh81::::res://src/assets/kamyki/kamyk8.obj<>uid://bxca7kqnfsbxd::::res://src/assets/drzewa/choinka.obj<>uid://c73jlegi0g7yp::::res://src/assets/kamyki/kamyk6.obj<>uid://tt30iinqqgim::::res://src/assets/budynki/most1.obj<>uid://ces1dfqkigmsp::::res://src/assets/drzewa/drzewo6.obj<>uid://c50f7sbewun2n::::res://src/assets/drzewa/drzewo7.obj<>uid://ba55bb4vxje1b::::res://src/assets/kamyki/kamyk5.obj<>uid://crvg3pkw6rv8l::::res://src/assets/kamyki/kamyk4.obj
 mapa_nowa1.glb::PackedScene::8590319713429917379::1775198242::1775198242::1::::<><><>0<>0<>e943a0f4fcb9fdfb506a5cf779f2b7ec<>res://.godot/imported/mapa_nowa1.glb-2dfcdd9fa06545d99e0b0df2a7f94271.scn::uid://d0scc5acj5y6c::::res://src/mapa_nowa1_wood_table_diff_4k.jpg<>uid://8h051mo3u4yu::::res://src/mapa_nowa1_wood-2045380_640.jpg
 mapa_nowa1_wood-2045380_640.jpg::CompressedTexture2D::2332255367788886104::1775198242::1775198242::1::::<><><>0<>0<>244374ef699ba1f94661cd70754318a7<>res://.godot/imported/mapa_nowa1_wood-2045380_640.jpg-c7ac44e34dba8379badf3a90fd4e4c08.s3tc.ctex::
@@ -43,7 +43,7 @@ mapa_nowa2_wood_table_diff_4k.jpg::CompressedTexture2D::2367084728910905780::177
 mapa_nowa.glb::PackedScene::7207206150496466855::1775312999::1775312999::1::::<><><>0<>0<>7ce9371bc391fe21933e815707dc8a94<>res://.godot/imported/mapa_nowa.glb-d770c88ed41974d6b4a193c87af9a432.scn::
 ::res://src/assets/::1775558960
 boahous.obj::Mesh::2904253044687117083::1775031970::1775313219::1::::<><><>0<>0<>7857dcf842aa62c34c100fc09dd9e7f6<>res://.godot/imported/boahous.obj-d5721fb60f7eead037ba93d4f7882835.mesh<*>res://.godot/imported/boahous.obj-d5721fb60f7eead037ba93d4f7882835.mesh::
-boat_material.tres::StandardMaterial3D::85748004712233::1774677415::0::1::::<><><>0<>0<><>::
+boat_material.tres::StandardMaterial3D::85748004712233::1775576637::0::1::::<><><>0<>0<><>::res://src/assets/mapa1_wood_table_diff_4k.jpg
 calm_water.png::CompressedTexture2D::7837419808664889464::1774677415::1774677415::1::::<><><>0<>0<>bba3bf0c038133645f2ee89c8515b21b<>res://.godot/imported/calm_water.png-5607486252afa6a9d4da55a19ec97b8a.s3tc.ctex::
 depth_mask.gdshader::Shader::3057958570571304668::1774677415::0::1::::<><><>0<>0<><>::
 depth_mask_material.tres::ShaderMaterial::-1::1774677415::0::1::::<><><>0<>0<><>::res://src/assets/depth_mask.gdshader
@@ -60,7 +60,7 @@ test3.obj::Mesh::7964010125247872347::1774677450::1775313220::1::::<><><>0<>0<>1
 tost.obj::Mesh::6254794503625297012::1775031970::1775313221::1::::<><><>0<>0<>a604a94b3bea4bf33621f79bddc93ae7<>res://.godot/imported/tost.obj-ec185834e150893858241f257adc43f0.mesh<*>res://.godot/imported/tost.obj-ec185834e150893858241f257adc43f0.mesh::
 tost_a.glb::PackedScene::468861581037211043::1775031970::1775049706::1::::<><><>0<>0<>71b0b71225214a0b9021fe1a64f6052b<>res://.godot/imported/tost_a.glb-6cb25af9825219899cda8d564964b331.scn::
 Unlilia wodnatitled.glb::PackedScene::8808451096788207931::1775198242::1775198242::1::::<><><>0<>0<>6f69ca4c135d0f3908598a7f72534e88<>res://.godot/imported/Unlilia wodnatitled.glb-35a9794f2af27e8eaa56fece738e1c6a.scn::
-water.gdshader::Shader::7745153102530342840::1775559134::0::1::::<><><>0<>0<><>::
+water.gdshader::Shader::7745153102530342840::1775585656::0::1::::<><><>0<>0<><>::
 woda.obj::Mesh::2049227322910726359::1774677415::1775313221::1::::<><><>0<>0<>8229e8dc4d1c1347c08702456b61f155<>res://.godot/imported/woda.obj-91e54bfae9e40d9bb71027a7c50b45aa.mesh<*>res://.godot/imported/woda.obj-91e54bfae9e40d9bb71027a7c50b45aa.mesh::
 łódeczka ekstra pełna.obj::Mesh::183510441056431438::1774677415::1775313221::1::::<><><>0<>0<>06c1918688efcb92b684ea85482a14e6<>res://.godot/imported/łódeczka ekstra pełna.obj-428d8eec377ef3c822f1233e8b90f859.mesh<*>res://.godot/imported/łódeczka ekstra pełna.obj-428d8eec377ef3c822f1233e8b90f859.mesh::
 łódeczka ekstra soft.obj::Mesh::164177333518628796::1774677415::1775313222::1::::<><><>0<>0<>5cce55d3b168f7a1e9351821a15930d8<>res://.godot/imported/łódeczka ekstra soft.obj-b79c9da3947e127104e38a2aea1f5c33.mesh<*>res://.godot/imported/łódeczka ekstra soft.obj-b79c9da3947e127104e38a2aea1f5c33.mesh::
@@ -108,7 +108,7 @@ auto_free_particles.gd::GDScript::3487043962172220563::1774677415::0::1::::<>GPU
 rain_particles.tscn::PackedScene::-1::1774677415::0::1::::<><><>0<>0<><>::
 splash_particles.tscn::PackedScene::-1::1774677415::0::1::::<><><>0<>0<><>::res://src/fx/auto_free_particles.gd
 ::res://src/player/::1775557491
-player3d.gd::GDScript::7538355666768809768::1775555480::0::1::::<>CharacterBody3D<><>0<>0<><>::
+player3d.gd::GDScript::7538355666768809768::1775585656::0::1::::<>CharacterBody3D<><>0<>0<><>::
 player3d.old.gd::GDScript::99888823449446513::1774677415::0::1::::<>CharacterBody3D<><>0<>0<><>::
 Player3D.tscn::PackedScene::266958898276946654::1775557491::0::1::::<><><>0<>0<><>::uid://dfnvu7vrhnh33::::res://src/player/player3d.gd<>uid://inventoryui::::res://src/ui/inventory_ui.tscn<>res://src/ui/bait_ui.tscn<>uid://b8dj5h753ryxt::::res://src/ui/clock_ui.tscn<>uid://d1xiobd701efn::::res://src/ui/quest_ui.tscn<>uid://dtfiyrl488qqg::::res://src/ui/achievement_popup.tscn<>res://src/ui/journal_ui.tscn<>res://src/ui/quota_ui.tscn<>uid://dawbwv1gf1r5w::::res://src/assets/lodeczka1.obj<>uid://boatmatstd::::res://src/assets/boat_material.tres<>uid://cu5njatqpp3c::::res://src/assets/łódeczka ekstra pełna.obj<>res://src/assets/depth_mask_material.tres<>uid://cvd4s0xtpdy4s::::res://src/assets/tost.obj
 player.gd::GDScript::2139445632124307418::1775031970::0::1::::<>CharacterBody2D<><>0<>0<><>::
@@ -150,7 +150,7 @@ achievement_popup.gd::GDScript::414678920919316250::1774677415::0::1::::<>Contro
 achievement_popup.tscn::PackedScene::8503701475220910046::1774677415::0::1::::<><><>0<>0<><>::uid://f54x3vvgl06a::::res://src/ui/achievement_popup.gd
 bait_ui.gd::GDScript::2433633240948883263::1774677415::0::1::::<>Control<><>0<>0<><>::
 bait_ui.tscn::PackedScene::-1::1774677415::0::1::::<><><>0<>0<><>::res://src/ui/bait_ui.gd
-board_ui.gd::GDScript::2844360662966802998::1775031970::0::1::::<>Control<><>0<>0<><>::
+board_ui.gd::GDScript::2844360662966802998::1775629525::0::1::::<>Control<><>0<>0<><>::
 board_ui.tscn::PackedScene::7811908655344956154::1775049702::0::1::::<><><>0<>0<><>::uid://bgr3g7p0h20fa::::res://src/ui/board_ui.gd
 catch_popup.gd::GDScript::3285904830658436146::1774677415::0::1::::<>Control<><>0<>0<><>::
 catch_popup.tscn::PackedScene::122435357455795::1774677415::0::1::::<><><>0<>0<><>::uid://bm2ymwuednwb7::::res://src/ui/catch_popup.gd
@@ -179,8 +179,8 @@ loadout_panel.tscn::PackedScene::800984693063231383::1775316473::0::1::::<><><>0
 lobby_hub.gd::GDScript::833736152631017919::1775551681::0::1::::<>Control<><>0<>0<><>::
 lobby_hub.tscn::PackedScene::5870290928518917043::1775317275::0::1::::<><><>0<>0<><>::uid://l44roufgdmhj::::res://src/ui/lobby_hub.gd<>res://src/ui/challenge_ui.tscn<>res://src/ui/progression_ui.tscn<>uid://draftuiscene::::res://src/ui/draft_ui.tscn<>res://src/ui/contract_offer_ui.tscn
 lobby_player.gd::GDScript::4246914371496324888::1775572012::0::1::::<>CharacterBody3D<><>0<>0<><>::
-lobby_world.gd::GDScript::8022184946157864176::1775572189::0::1::::<>Node3D<><>0<>0<><>::
-lobby_world.tscn::PackedScene::6019987594620422981::1775570079::0::1::::<><><>0<>0<><>::uid://b1ricappi35t1::::res://src/ui/lobby_player.gd<>uid://dmkahjnlx3e8o::::res://src/ui/lobby_world.gd<>uid://draftuiscene::::res://src/ui/draft_ui.tscn<>res://src/ui/loadout_panel.tscn<>uid://bhm3vgtln2agh::::res://src/assets/boahous.obj<>res://src/ui/contract_offer_ui.tscn<>uid://djke82k2fw5xu::::res://src/ui/board_ui.tscn<>uid://cvd4s0xtpdy4s::::res://src/assets/tost.obj<>res://src/assets/tost_a.glb
+lobby_world.gd::GDScript::8022184946157864176::1775629525::0::1::::<>Node3D<><>0<>0<><>::
+lobby_world.tscn::PackedScene::6019987594620422981::1775629525::0::1::::<><><>0<>0<><>::uid://b1ricappi35t1::::res://src/ui/lobby_player.gd<>uid://dmkahjnlx3e8o::::res://src/ui/lobby_world.gd<>uid://draftuiscene::::res://src/ui/draft_ui.tscn<>res://src/ui/loadout_panel.tscn<>uid://bhm3vgtln2agh::::res://src/assets/boahous.obj<>res://src/ui/contract_offer_ui.tscn<>uid://djke82k2fw5xu::::res://src/ui/board_ui.tscn<>uid://cvd4s0xtpdy4s::::res://src/assets/tost.obj<>res://src/assets/tost_a.glb<>res://src/assets/lodeczka1.obj
 main_menu.gd::GDScript::5259264885615384503::1775031970::0::1::::<>Control<><>0<>0<><>::
 main_menu.tscn::PackedScene::205523553065163571::1774677415::0::1::::<><><>0<>0<><>::res://src/ui/main_menu.gd
 pause_menu.gd::GDScript::6106350907119043996::1775049332::0::1::::<>Control<><>0<>0<><>::
@@ -206,4 +206,4 @@ mapa_nowa2_wood_table_diff_4k.jpg::CompressedTexture2D::609879547152115823::1775
 obstacle_rock.tscn::PackedScene::-1::1774677415::0::1::::<><><>0<>0<><>::
 Shop.tscn::PackedScene::37609629172246384::1774677415::0::1::::<><><>0<>0<><>::res://src/world/shop_area.gd
 shop_area.gd::GDScript::746172906375729203::1774677415::0::1::::<>Area3D<><>0<>0<><>::
-water.gd::GDScript::122614811132883781::1774677415::0::1::::<>MeshInstance3D<><>0<>0<><>::
+water.gd::GDScript::122614811132883781::1775585656::0::1::::<>MeshInstance3D<><>0<>0<><>::

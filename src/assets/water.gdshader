@@ -26,6 +26,9 @@ uniform vec2 mask_size = vec2(0.9, 1.8);   // Rozmiar maski (Szerokość, Długo
 
 // Boat Rotation (Yaw)
 uniform float boat_rotation_y = 0.0;
+uniform vec3 wake_origin = vec3(0.0, 0.0, 0.0);
+uniform float wake_strength : hint_range(0.0, 2.0) = 0.0;
+uniform float wake_radius : hint_range(1.0, 40.0) = 14.0;
 
 varying vec3 v_vertex; // Potrzebne do obliczenia płaskich normalnych
 varying vec3 v_world_pos; // World position for boat mask
@@ -56,6 +59,11 @@ void vertex() {
 	// Displacement - Use wave_time for sync
 	float h = get_height(VERTEX.xz, wave_time);
 	VERTEX.y += h;
+
+	float wake_dist = distance(v_world_pos.xz, wake_origin.xz);
+	float wake_falloff = 1.0 - smoothstep(0.0, wake_radius, wake_dist);
+	float wake_wave = sin((wake_dist * 1.8) - wave_time * 4.0) * wake_falloff * wake_strength * 0.08;
+	VERTEX.y += wake_wave;
 	
 	// Przekazujemy pozycję wierzchołka (View Space) do fragment shadera
 	v_vertex = VERTEX;
@@ -111,6 +119,10 @@ void fragment() {
 	vec3 view_dir = normalize(VIEW);
 	float fresnel = pow(1.0 - max(dot(NORMAL, view_dir), 0.0), fresnel_power);
 	SPECULAR = mix(0.2, reflect_strength, fresnel);
-	ROUGHNESS = mix(roughness, gloss_roughness, fresnel);
+	float wake_dist_frag = distance(v_world_pos.xz, wake_origin.xz);
+	float wake_falloff_frag = 1.0 - smoothstep(0.0, wake_radius, wake_dist_frag);
+	float wake_mix = clamp(wake_falloff_frag * wake_strength, 0.0, 1.0);
+	float fresnel_roughness = mix(roughness, gloss_roughness, fresnel);
+	ROUGHNESS = mix(fresnel_roughness, max(0.02, gloss_roughness * 0.75), wake_mix);
 	METALLIC = 0.0;
 }

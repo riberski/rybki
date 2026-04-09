@@ -53,9 +53,7 @@ func _on_quit_pressed():
 
 func _update_run_info():
 	var text = "[b]RUN STATUS:[/b]\n"
-	
-	if QuotaManager:
-		text += "Hull Integrity: %.1f%% / %.1f%%\n\n" % [QuotaManager.hull_integrity, QuotaManager.max_hull]
+	text += "\n"
 	
 	# Global Stats
 	if InventoryManager:

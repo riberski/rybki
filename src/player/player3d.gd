@@ -4,10 +4,21 @@ extends CharacterBody3D
 @export var acceleration := 10.0
 @export var friction := 5.0
 @export var mouse_sensitivity := 0.2
+@export var camera_pitch_min_deg := -58.0
+@export var camera_pitch_max_deg := 16.0
+@export var camera_default_pitch_deg := -14.0
+@export var camera_base_distance := 4.2
+@export var camera_move_distance := 5.0
+@export var camera_reel_distance := 3.6
+@export var camera_distance_smooth := 6.0
 @export var water_level := -1.0
 @export var float_height_offset := 0.1 # Unosi łódkę wyżej, mniej zalewania
 @export var buoyancy_force := 150.0 # Większa siła wyporu, mniej tonięcia
 @export var water_drag := 4.0 # Keep drag
+@export var wake_update_interval := 0.08
+@export var wake_speed_threshold := 2.2
+@export var wake_turn_threshold := 0.8
+@export var wake_splash_cooldown := 0.28
 var water_node : Node3D = null
 
 # Animation settings
@@ -28,6 +39,7 @@ var fish_preview_mesh_paths := [
 var fish_preview_meshes: Array[Mesh] = []
 
 @onready var camera_pivot = $CameraPivot
+@onready var spring_arm = $CameraPivot/SpringArm3D
 @onready var camera = $CameraPivot/SpringArm3D/Camera3D
 # These rod nodes might crash if renamed, using find_child is safer but let's assume they exist
 @onready var rod_pivot = $RodPivot
@@ -43,6 +55,11 @@ var fish_preview_hide_timer: Timer
 @export var fish_preview_height := 1.0
 @export var fish_preview_duration := 3.0
 @export var fish_preview_scale := Vector3.ONE * 0.35
+@export var player_mesh_yaw_offset := -PI * 0.5
+@export var player_mesh_local_offset := Vector3(0.0, 0.42, 0.0)
+@export var player_mesh_scale := Vector3.ONE
+@export var player_idle_sway_amount := 0.04
+@export var player_idle_sway_speed := 1.9
 
 var direction := Vector3.ZERO
 var rotation_y := 0.0
@@ -50,6 +67,10 @@ var default_rod_rotation: Vector3
 
 var time_passed := 0.0
 var _storm_damage_tick := 0.0
+var _wake_timer := 0.0
+var _wake_splash_timer := 0.0
+var _last_rotation_y := 0.0
+var _player_mesh_base_pos := Vector3.ZERO
 
 # Store initial rotation to allow manual editor adjustments
 var initial_mesh_basis: Basis
@@ -66,6 +87,7 @@ var draft_ui: Control
 var pause_menu: Control
 var interact_label_node: Label
 var notification_label_node: Label
+var fishing_hint_label_node: Label
 var catch_popup_ui: Control
 var _notification_serial: int = 0
 
@@ -88,6 +110,14 @@ func _ready():
 	if boat_depth_mask:
 		mask_local_offset = boat_mesh.transform.basis.inverse() * (boat_depth_mask.position - boat_mesh.position)
 	default_rod_rotation = rod_pivot.rotation
+	_last_rotation_y = rotation_y
+	if spring_arm:
+		spring_arm.spring_length = camera_base_distance
+	camera_pivot.rotation.x = deg_to_rad(camera_default_pitch_deg)
+	if player_mesh:
+		player_mesh.position = player_mesh_local_offset
+		player_mesh.scale = player_mesh_scale
+		_player_mesh_base_pos = player_mesh.position
 	
 	setup_fishing_manager()
 	_setup_fish_preview()
@@ -211,6 +241,8 @@ func _physics_process(delta):
 		_cast_hold_time = min(_cast_hold_time, max_cast_charge_time)
 
 	var gameplay_blocked := _is_gameplay_input_blocked()
+	if _wake_splash_timer > 0.0:
+		_wake_splash_timer = max(0.0, _wake_splash_timer - delta)
 
 	# Movement - TANK CONTROLS (Independent of Camera)
 	var steering_multiplier := 1.0
@@ -404,6 +436,7 @@ func _physics_process(delta):
 	
 	var speed_before_collision := Vector2(velocity.x, velocity.z).length()
 	move_and_slide()
+	var planar_speed := Vector2(velocity.x, velocity.z).length()
 
 	if InventoryManager and TimeManager and TimeManager.extraction_active:
 		for i in range(get_slide_collision_count()):
@@ -470,11 +503,38 @@ func _physics_process(delta):
 	# This lets the player look around freely while steering the boat independently
 	if player_mesh:
 		# Smoothly rotate player towards camera angle
-		player_mesh.rotation.y = lerp_angle(player_mesh.rotation.y, camera_pivot.rotation.y, 15.0 * delta)
+		player_mesh.rotation.y = lerp_angle(player_mesh.rotation.y, camera_pivot.rotation.y + player_mesh_yaw_offset, 15.0 * delta)
+		var idle_blend: float = clampf(1.0 - (planar_speed / maxf(0.001, speed * 1.05)), 0.0, 1.0)
+		var sway: float = sin(time_passed * player_idle_sway_speed) * player_idle_sway_amount * idle_blend
+		player_mesh.position = _player_mesh_base_pos + Vector3(0.0, sway, 0.0)
 		
 	if rod_pivot:
 		# Also rotate the fishing rod so it stays with the player model
 		rod_pivot.rotation.y = player_mesh.rotation.y
+
+	# Dynamic camera distance: farther while moving, closer in reeling state.
+	if spring_arm:
+		var speed_t: float = clampf(planar_speed / maxf(0.001, speed), 0.0, 1.0)
+		var target_distance: float = lerpf(camera_base_distance, camera_move_distance, speed_t)
+		if fishing_manager and int(fishing_manager.get("current_state")) == 4:
+			target_distance = camera_reel_distance
+		spring_arm.spring_length = move_toward(spring_arm.spring_length, target_distance, camera_distance_smooth * delta)
+
+	# Wake and splash polish when moving/turning on water.
+	var yaw_delta: float = absf(wrapf(rotation_y - _last_rotation_y, -PI, PI))
+	var turn_rate: float = yaw_delta / maxf(delta, 0.001)
+	if water_node and water_node.has_method("trigger_wake_pulse"):
+		_wake_timer += delta
+		if planar_speed > wake_speed_threshold and _wake_timer >= wake_update_interval:
+			_wake_timer = 0.0
+			var wake_strength: float = clampf(planar_speed / maxf(0.001, speed * 1.25), 0.2, 1.0)
+			if turn_rate > wake_turn_threshold:
+				wake_strength = clampf(wake_strength + 0.25, 0.2, 1.25)
+			water_node.trigger_wake_pulse(global_position, wake_strength)
+			if turn_rate > wake_turn_threshold and planar_speed > 4.5 and _wake_splash_timer <= 0.0:
+				spawn_splash(current_water_height)
+				_wake_splash_timer = wake_splash_cooldown
+	_last_rotation_y = rotation_y
 	
 	# Check interactions only when gameplay is active.
 	if not gameplay_blocked:
@@ -483,6 +543,7 @@ func _physics_process(delta):
 		current_interactable = null
 		if interact_label_node:
 			interact_label_node.hide()
+	_update_fishing_hint(gameplay_blocked)
 
 func _input(event):
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
@@ -492,7 +553,7 @@ func _input(event):
 		
 		# Rotate Camera Pitch
 		camera_pivot.rotation.x -= event.relative.y * mouse_sensitivity * 0.01
-		camera_pivot.rotation.x = clamp(camera_pivot.rotation.x, deg_to_rad(-60), deg_to_rad(10))
+		camera_pivot.rotation.x = clamp(camera_pivot.rotation.x, deg_to_rad(camera_pitch_min_deg), deg_to_rad(camera_pitch_max_deg))
 
 	# Toggle Inventory
 	if Input.is_action_just_pressed("toggle_inventory"):
@@ -608,7 +669,7 @@ func check_interactables():
 		if collider.has_method("interact"):
 			current_interactable = collider
 			if interact_label_node:
-				interact_label_node.text = "Press E to interact"
+				interact_label_node.text = "[E] Interakcja"
 				interact_label_node.show()
 			return
 
@@ -616,7 +677,7 @@ func check_interactables():
 	if not current_interactable and area_interactable:
 		current_interactable = area_interactable
 		if interact_label_node:
-			var txt = "Press E to Interact"
+			var txt = "[E] Interakcja"
 			if area_interactable.has_method("get_interact_text"):
 				txt = area_interactable.get_interact_text()
 			interact_label_node.text = txt
@@ -688,7 +749,7 @@ func _ensure_runtime_ui_labels(search_root: Node) -> void:
 	if interact_label_node == null:
 		interact_label_node = Label.new()
 		interact_label_node.name = "InteractLabel"
-		interact_label_node.text = "Press E to interact"
+		interact_label_node.text = "[E] Interakcja"
 		interact_label_node.visible = false
 		ui_parent.add_child(interact_label_node)
 		interact_label_node.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -696,6 +757,8 @@ func _ensure_runtime_ui_labels(search_root: Node) -> void:
 		interact_label_node.offset_bottom = -80.0
 		interact_label_node.grow_horizontal = Control.GROW_DIRECTION_BOTH
 		interact_label_node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		interact_label_node.add_theme_color_override("font_color", Color(0.97, 0.99, 1.0))
+		interact_label_node.add_theme_font_size_override("font_size", 22)
 
 	if notification_label_node == null:
 		notification_label_node = Label.new()
@@ -709,3 +772,43 @@ func _ensure_runtime_ui_labels(search_root: Node) -> void:
 		notification_label_node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		notification_label_node.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35))
 		notification_label_node.add_theme_font_size_override("font_size", 22)
+
+	if fishing_hint_label_node == null:
+		fishing_hint_label_node = Label.new()
+		fishing_hint_label_node.name = "FishingHintLabel"
+		fishing_hint_label_node.visible = false
+		ui_parent.add_child(fishing_hint_label_node)
+		fishing_hint_label_node.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+		fishing_hint_label_node.offset_top = -170.0
+		fishing_hint_label_node.offset_bottom = -130.0
+		fishing_hint_label_node.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		fishing_hint_label_node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		fishing_hint_label_node.add_theme_color_override("font_color", Color(0.72, 0.92, 1.0))
+		fishing_hint_label_node.add_theme_font_size_override("font_size", 20)
+
+func _update_fishing_hint(gameplay_blocked: bool) -> void:
+	if fishing_hint_label_node == null:
+		return
+	if gameplay_blocked or fishing_manager == null:
+		fishing_hint_label_node.hide()
+		return
+
+	var state := int(fishing_manager.get("current_state"))
+	if _is_cast_button_held and state == 0:
+		var ratio: float = clampf(inverse_lerp(min_cast_charge_time, max_cast_charge_time, _cast_hold_time), 0.0, 1.0)
+		fishing_hint_label_node.text = "Rzut: %d%%  |  Pusc CAST" % int(round(ratio * 100.0))
+		fishing_hint_label_node.show()
+		return
+
+	match state:
+		2:
+			fishing_hint_label_node.text = "Czekaj na branie..."
+			fishing_hint_label_node.show()
+		3:
+			fishing_hint_label_node.text = "BRANIE! Nacisnij CAST teraz"
+			fishing_hint_label_node.show()
+		4:
+			fishing_hint_label_node.text = "Holowanie... utrzymaj rytm"
+			fishing_hint_label_node.show()
+		_:
+			fishing_hint_label_node.hide()

@@ -17,6 +17,7 @@ extends Node3D
 @onready var board_screen_collider: CollisionObject3D = get_node_or_null("Tablica/BoardUIScreen/ScreenCollider")
 @onready var player_camera: Camera3D = $LobbyPlayer/CameraPivot/SpringArm3D/Camera3D
 @onready var lobby_player: Node3D = $LobbyPlayer
+@onready var boats_root: Node3D = get_node_or_null("Boats")
 @onready var dir_light: DirectionalLight3D = get_node_or_null("DirectionalLight3D")
 @onready var key_light: SpotLight3D = get_node_or_null("LobbyLights/KeyLight")
 @onready var fill_light: OmniLight3D = get_node_or_null("LobbyLights/FillLight")
@@ -25,6 +26,14 @@ extends Node3D
 
 var board_open := false
 var player_in_board_area := false
+var _boat_overlap_count: int = 0
+var _boat_area_to_id: Dictionary = {}
+var _boat_node_to_id: Dictionary = {
+	"BoatA": "starter",
+	"BoatB": "skiff",
+	"BoatC": "cutter"
+}
+var _active_boat_id: String = ""
 var _previous_mouse_mode := Input.MOUSE_MODE_VISIBLE
 var _board_light_base_energy: float = 3.0
 
@@ -59,6 +68,12 @@ func _ready() -> void:
 		board_area.collision_mask = 1
 		board_area.body_entered.connect(_on_board_area_entered)
 		board_area.body_exited.connect(_on_board_area_exited)
+	if InventoryManager and not InventoryManager.boat_changed.is_connected(_on_lobby_boat_changed):
+		InventoryManager.boat_changed.connect(_on_lobby_boat_changed)
+	if InventoryManager and not InventoryManager.money_updated.is_connected(_on_lobby_money_changed):
+		InventoryManager.money_updated.connect(_on_lobby_money_changed)
+	_update_lobby_boats_visibility()
+	_setup_boat_areas()
 	_set_board_mode(false)
 
 func _process(_delta: float) -> void:
@@ -69,13 +84,19 @@ func _process(_delta: float) -> void:
 	if board_light:
 		# Subtle screen glow pulse makes the board feel more alive.
 		board_light.light_energy = _board_light_base_energy + sin(Time.get_ticks_msec() * 0.0025) * 0.35
-	var can_use := _can_use_board()
+	var can_use_boat: bool = _can_use_boat()
+	var can_use_board: bool = _can_use_board()
 	if popup:
-		popup.visible = can_use
-		if can_use:
+		popup.visible = can_use_boat or can_use_board
+		if can_use_boat:
+			popup_label.text = _get_active_boat_name()
+			popup_hint.text = "E: 1/4 READY - wyplyn w rejs"
+		elif can_use_board:
 			popup_label.text = "Tablica"
-			popup_hint.text = "E: otworz tablice"
-	if Input.is_action_just_pressed("interact") and can_use:
+			popup_hint.text = "E: ustawienia"
+	if Input.is_action_just_pressed("interact") and can_use_boat:
+		_start_run_from_boat()
+	elif Input.is_action_just_pressed("interact") and can_use_board:
 		_open_board()
 
 func _input(event: InputEvent) -> void:
@@ -86,8 +107,12 @@ func _input(event: InputEvent) -> void:
 			_close_board()
 			return
 		return
-	if _is_interact_event(event) and _can_use_board():
-		_open_board()
+	if _is_interact_event(event):
+		if _can_use_boat():
+			_start_run_from_boat()
+			return
+		if _can_use_board():
+			_open_board()
 
 func _is_interact_event(event: InputEvent) -> bool:
 	if event.is_action_pressed("interact"):
@@ -166,7 +191,7 @@ func _on_board_area_entered(body: Node) -> void:
 		return
 	player_in_board_area = true
 	popup_label.text = "Tablica"
-	popup_hint.text = "E: otworz tablice"
+	popup_hint.text = "E: ustawienia"
 	popup.visible = true
 
 func _on_board_area_exited(body: Node) -> void:
@@ -175,6 +200,98 @@ func _on_board_area_exited(body: Node) -> void:
 	player_in_board_area = false
 	if not board_open:
 		popup.visible = false
+
+func _setup_boat_areas() -> void:
+	_boat_area_to_id.clear()
+	if boats_root == null:
+		return
+	for boat_node in boats_root.get_children():
+		if not (boat_node is Node3D):
+			continue
+		var boat_name: String = str(boat_node.name)
+		var boat_id: String = str(_boat_node_to_id.get(boat_name, ""))
+		if boat_id == "":
+			continue
+		var area: Area3D = boat_node.get_node_or_null("InteractArea")
+		if area == null:
+			continue
+		_boat_area_to_id[area] = boat_id
+		area.monitoring = true
+		area.monitorable = true
+		area.collision_layer = 1
+		area.collision_mask = 1
+		if not area.body_entered.is_connected(_on_boat_area_entered):
+			area.body_entered.connect(_on_boat_area_entered)
+		if not area.body_exited.is_connected(_on_boat_area_exited):
+			area.body_exited.connect(_on_boat_area_exited)
+
+func _on_boat_area_entered(body: Node) -> void:
+	if body != lobby_player and not body.is_in_group("lobby_player"):
+		return
+	_boat_overlap_count += 1
+
+func _on_boat_area_exited(body: Node) -> void:
+	if body != lobby_player and not body.is_in_group("lobby_player"):
+		return
+	_boat_overlap_count = max(0, _boat_overlap_count - 1)
+	if _boat_overlap_count == 0:
+		_active_boat_id = ""
+
+func _can_use_boat() -> bool:
+	if lobby_player == null:
+		return false
+	if _boat_overlap_count > 0:
+		# Keep showing a stable name if player is inside any boat trigger.
+		if _active_boat_id == "" and InventoryManager:
+			_active_boat_id = str(InventoryManager.current_boat_id)
+		return true
+
+	for area_any in _boat_area_to_id.keys():
+		var area: Area3D = area_any
+		var shape_node: CollisionShape3D = area.get_node_or_null("CollisionShape3D")
+		if shape_node == null:
+			continue
+		var shape = shape_node.shape
+		if shape is BoxShape3D:
+			var local_pos: Vector3 = area.to_local(lobby_player.global_transform.origin)
+			var half: Vector3 = shape.size * 0.5
+			var margin: float = 0.55
+			if abs(local_pos.x) <= half.x + margin and abs(local_pos.z) <= half.z + margin:
+				_active_boat_id = str(_boat_area_to_id.get(area, ""))
+				return true
+
+	_active_boat_id = ""
+	return false
+
+func _on_lobby_boat_changed(_boat_id: String) -> void:
+	_update_lobby_boats_visibility()
+
+func _on_lobby_money_changed(_money: int) -> void:
+	_update_lobby_boats_visibility()
+
+func _update_lobby_boats_visibility() -> void:
+	if boats_root == null:
+		return
+	if InventoryManager == null:
+		return
+	for boat_node in boats_root.get_children():
+		if not (boat_node is Node3D):
+			continue
+		var boat_name: String = str(boat_node.name)
+		var boat_id: String = str(_boat_node_to_id.get(boat_name, ""))
+		if boat_id == "":
+			boat_node.visible = false
+			continue
+		boat_node.visible = InventoryManager.owned_boats.has(boat_id)
+
+func _get_active_boat_name() -> String:
+	if InventoryManager == null:
+		return "Lodz"
+	if _active_boat_id == "":
+		var current_data = InventoryManager.get_current_boat_data()
+		return str(current_data.get("name", "Lodz"))
+	var data: Dictionary = InventoryManager.boats_catalog.get(_active_boat_id, {"name": "Lodz"})
+	return str(data.get("name", "Lodz"))
 
 func _can_use_board() -> bool:
 	if lobby_player == null:
@@ -217,6 +334,13 @@ func _close_board() -> void:
 		board_ui_overlay.hide()
 	# Always return to mouselook after board is closed.
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+func _start_run_from_boat() -> void:
+	popup.visible = false
+	if TimeManager:
+		TimeManager.set_extraction_duration_minutes(TimeManager.EXTRACTION_MAX_MINUTES)
+		TimeManager.start_extraction()
+	get_tree().change_scene_to_file("res://src/Main3D.tscn")
 
 func _set_board_mode(active: bool) -> void:
 	board_open = active
@@ -424,11 +548,8 @@ func _style_popup() -> void:
 func _execute_option(option_id: String) -> void:
 	match option_id:
 		"start_run":
-			_close_board()
-			if TimeManager:
-				TimeManager.set_extraction_duration_minutes(TimeManager.EXTRACTION_MAX_MINUTES)
-				TimeManager.start_extraction()
-			get_tree().change_scene_to_file("res://src/Main3D.tscn")
+			# Board is settings-only in lobby; runs start from boat interaction.
+			pass
 		"sell_all":
 			pass
 		"claim_fish":

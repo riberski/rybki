@@ -225,13 +225,9 @@ func _refresh_boat_info() -> void:
 func _refresh_expedition_info() -> void:
 	var context := _build_start_run_context()
 	if expedition_info_label:
-		var hull_text := "--/--"
-		if QuotaManager:
-			hull_text = "%d/%d" % [int(ceil(QuotaManager.hull_integrity)), int(ceil(QuotaManager.max_hull))]
-		expedition_info_label.text = "Plan i start wyprawy\nPrzyneta: %s x%d | Kadlub: %s" % [
+		expedition_info_label.text = "Plan wyprawy (start z lodzi)\nPrzyneta: %s x%d" % [
 			str(context.get("bait_id", "bread")),
-			int(context.get("bait_count", 0)),
-			hull_text
+			int(context.get("bait_count", 0))
 		]
 	if not InventoryManager:
 		if expedition_positive_label:
@@ -246,9 +242,11 @@ func _refresh_expedition_info() -> void:
 		expedition_positive_label.text = "+ %s" % str(InventoryManager.expedition_positive.get("desc", "Brak"))
 	if expedition_negative_label:
 		expedition_negative_label.text = "- %s" % str(InventoryManager.expedition_negative.get("desc", "Brak"))
-	var can_start := _can_start_run(context)
+	var can_start := false
+	_start_run_block_reason = "Start wyprawy tylko z poziomu lodzi (E: 1/4 READY)."
 	if start_run_button:
 		start_run_button.disabled = not can_start
+		start_run_button.text = "Start z lodzi"
 		if can_start:
 			start_run_button.tooltip_text = "Rozpocznij wyprawe."
 		else:
@@ -311,16 +309,10 @@ func _can_start_run(context: Dictionary = {}) -> bool:
 	if int(resolved.get("bait_count", 0)) <= 0:
 		_start_run_block_reason = "Brak przynety: %s." % str(resolved.get("bait_id", "bread"))
 		return false
-	if QuotaManager and float(QuotaManager.hull_integrity) <= 0.0:
-		_start_run_block_reason = "Kadlub zniszczony. Napraw lodz przed rejsem."
-		return false
 	return true
 
 func _on_start_run_pressed() -> void:
-	if not _can_start_run():
-		_refresh_expedition_info()
-		return
-	action_selected.emit("start_run")
+	_refresh_expedition_info()
 
 func _on_contract_pressed() -> void:
 	if not QuestManager:

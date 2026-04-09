@@ -10,6 +10,8 @@ var _latest_risk: float = 0.0
 var _latest_durability_ratio: float = 1.0
 
 func _ready():
+	if durability_label:
+		durability_label.hide()
 	if TimeManager:
 		TimeManager.time_tick.connect(update_time_display)
 		TimeManager.extraction_time_changed.connect(_on_extraction_time_changed)
@@ -95,6 +97,8 @@ func _update_risk_label(risk_level: float) -> void:
 func _update_durability_label(ratio: float) -> void:
 	_latest_durability_ratio = clamp(ratio, 0.0, 1.0)
 	if not durability_label:
+		return
+	if not durability_label.visible:
 		return
 	var percent := int(round(_latest_durability_ratio * 100.0))
 	durability_label.text = "Kadlub: %d%%" % percent
